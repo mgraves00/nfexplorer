@@ -1,22 +1,37 @@
 #
 FROM alpine:latest AS nfexplorer
 MAINTAINER <mg@>
-EXPOSE 8080
 
-RUN apk add --no-cache nginx nfdump
+RUN apk add --no-cache nginx nfdump fcgiwrap oksh coreutils
 
 WORKDIR /app
 
-RUN mkdir flow-data
+RUN ln /usr/bin/oksh /bin/ksh
+
+RUN mkdir -m 775 flow-data
+RUN chown nginx:nginx flow-data
 RUN mkdir config
 RUN mkdir -m 775 logs
 RUN chown nginx:nginx logs
+RUN mkdir html
+RUN chown nginx:nginx html
 
+# copy the local file to save on bandwidth.  esp. while testing the image
+#ADD https://github.com/danvk/dygraphs/releases/download/v2.2.1/dygraphs-2.2.1.tgz .
+COPY dygraphs-2.2.1.tgz .
+RUN <<EOF
+tar -xzf dygraphs-2.2.1.tgz package/dist/dygraph.* 
+mv package/dist/dygraph.* /app/html/ 
+rm -rf /app/package
+EOF
 COPY nginx.conf nginx.conf.dist
-COPY index.html index.html
+COPY index.html html/index.html
 COPY nfquery.env nfquery.env.dist
-COPY --chmod=755 nfquery.cgi nfquery.cgi
+COPY --chmod=755 nfquery.cgi html/nfquery.cgi
 COPY --chmod=755 entrypoint.sh entrypoint.sh
+
+EXPOSE 8080/tcp
+EXPOSE 9995/udp
 
 VOLUME flow-data
 VOLUME config

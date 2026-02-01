@@ -33,9 +33,9 @@ COPY --chmod=755 entrypoint.sh entrypoint.sh
 EXPOSE 8080/tcp
 EXPOSE 9995/udp
 
-VOLUME flow-data
-VOLUME config
-VOLUME logs
+#VOLUME flow-data
+#VOLUME config
+#VOLUME logs
 
 #ENTRYPOINT ["/bin/ash"]
 ENTRYPOINT ["/app/entrypoint.sh"]

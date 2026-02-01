@@ -5,6 +5,18 @@ _CGI_sent_header=0
 _prepare_qs=0
 _saved_QUERY_STRING=""
 
+function find_env {
+	LIST="/etc/nfquery.env .nfquery.env"
+	for f in ${LIST} ; do
+		if [ -f "$f" ]; then
+			echo $f
+			return
+		fi
+	done
+	echo ""
+	return
+}
+
 function urldecode {
 	local _e=$1
 	if [ -z "${_e}" ]; then
@@ -187,6 +199,14 @@ function build_filter {
 
 
 ## MAIN
+ENV=$(find_env)
+if [ ! -z "${ENV}" -a -f "${ENV}" ]; then
+	. ${ENV}
+fi
+if [ -z "${FLOW_DIR}" -o ! -d "${FLOW_DIR}" ]; then
+	echo "error: FLOW_DIR not found"
+	exit 1
+fi
 prepare_query_string "$*"
 
 # generate time range
@@ -213,7 +233,8 @@ OUTPUT_FMT="csv:%trr,%td,%pr,%sa,%sp,%da,%dp,%ttl,%it,%ic,%pkt,%byt,%pps,%bps,%f
 add_header "Content-type" "application/text"
 print_header
 
-flow_args="-q -r /var/db/nfsen/profiles-data/live/"
+#flow_args="-q -r /var/db/nfsen/profiles-data/live/"
+flow_args="-q -r ${FLOW_DIR}"
 filter=`query_value "filter"`
 if [ $? -ne 0 ]; then
 	filter=`build_filter`

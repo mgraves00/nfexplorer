@@ -15,8 +15,12 @@ RUN chown nginx:nginx logs
 COPY nginx.conf nginx.conf.dist
 COPY index.html index.html
 COPY nfquery.env nfquery.env.dist
-COPY nfquery.cgi nfquery.cgi
+COPY --chmod 755 nfquery.cgi nfquery.cgi
+COPY --chmod 755 entrypoint.sh entrypoint.sh
 
-#VOLUME flow-data
+VOLUME flow-data
+VOLUME config
+VOLUME logs
 
-ENTRYPOINT ["/bin/ash"]
+#ENTRYPOINT ["/bin/ash"]
+ENTRYPOINT ["/app/entrypoint.sh"]

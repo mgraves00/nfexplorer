@@ -3,3 +3,8 @@ Makefile
 index.html
 nfquery.cgi
 nfquery.env
+.env
+dygraphs-*.tgz
+logs/**
+data/**
+config/**

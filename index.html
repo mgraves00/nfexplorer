@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html type=en data-bs-theme="dark">
+<head>
+	<title>Netflow Explorer</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+	<link rel="sytlesheet" type="text/css" href="dygraph.css" />
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+	<script type="text/javascript" src="dygraph.js"></script>
+
+</head>
+<body>
+	<div class="container mt-2">
+	<form>
+		<div class="row">
+		<div class="col-2">
+			<label for="timetype" class="form-label">Type</label>
+			<select type="input" class="form-select" id="timetype" aria-describedby="timetypehelp">
+				<option value="relative" selected>Relative</option>
+				<option value="range">Range</option>
+			</select>
+			<div id="timetypehelp" class="form-text">Type of time range</div>
+		</div>
+		<div class="col-6 d-none" id="relativetimeselect">
+			<label for="relativetime" class="form-label">Time Frame</label>
+			<div class="input-group">
+				<input id="relativetime" type="text" class="form-control" value="5" aria-label="realitive time" aria-describedby="relativetimehelp">
+				<ul id="relativetimedropdown" class="dropdown-menu dropdown-menu-end">
+					<li><a class="dropdown-item" href="#" data-value="1">1 min</a></li>
+					<li><a class="dropdown-item" href="#" data-value="5">5 min</a></li>
+					<li><a class="dropdown-item" href="#" data-value="10">10 min</a></li>
+					<li><a class="dropdown-item" href="#" data-value="30">30 min</a></li>
+					<li><a class="dropdown-item" href="#" data-value="1h">1 hour</a></li>
+					<li><a class="dropdown-item" href="#" data-value="12h">12 hour</a></li>
+					<li><a class="dropdown-item" href="#" data-value="1d">1 day</a></li>
+					<li><a class="dropdown-item" href="#" data-value="1w">1 week</a></li>
+					<li><a class="dropdown-item" href="#" data-value="1m">1 month</a></li>
+				</ul>
+				<button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"></button>
+			</div>
+			<div id="relativetimehelp" class="form-text">Select relative timeframe for flows</div>
+		</div>
+		<div class="col-6 d-none" id="rangetimeselect">
+			<div class="row">
+			<div class="col">
+				<label for="startdate starttime" class="form-label">Start Time</label>
+				<span class="input-group">
+					<input type="date" id="startdate" class="text" class="form-control" aria-label="start date">
+					<input type="time" id="starttime" class="text" class="form-control" aria-label="start time">
+				</span>
+			</div>
+			<div class="col">
+				<label for="enddate endtime" class="form-label">End Time</label>
+				<span class="input-group">
+					<input type="date" id="enddate" class="text" class="form-control" aria-label="end date">
+					<input type="time" id="endtime" class="text" class="form-control" aria-label="end time">
+				</span>
+			</div>
+			</div>
+			<div id="rangetimehelp" class="form-text">Select start and end times for flows</div>
+		</div>
+		<div class="col-2">
+			<label for="options" class="form-label">Options</label>
+<!-- use button groups if more than one button -->
+			<div class="input-group">
+				<button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Fields</button>
+				<ul id="fieldsdropdown" class="dropdown-menu">
+<!--
+					<li>
+						<div class="dropdown-item input-group-text">
+						<div class="form-check">
+						<input class="form-check-input" id="label1" type="checkbox" value="" aria-label="Checkbox for following text input">
+						<label class="form-check-label" for="label1">checkbox description</label>
+						</div>
+						</div>
+					</li>
+-->
+				</ul>
+
+			</div>
+			<div id="optionshelp" class="form-text">Query options</div>
+		</div>
+<!--
+		<div class="col-2 align-self-end">
+			<button type="button" id="flowsearch" class="btn btn-primary align-bottom">
+				<span role="status">Search</span>
+				<span role="status" class="visually-hidden" aria-hidden="true">
+					<span role="status" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+					<span>Loading...</span>
+				</span>
+			</button>
+		</div>
+-->
+		</div>
+<!-- filter -->
+		<div class="row">
+		<div class="col-12">
+			<label for="filter" class="form-label">Filter</label>
+			<div class="input-group">
+			<input class="form-control" id="filter" aria-describedby="filterhelp" placeholder="*">
+			<button type="button" id="clearsearch" class="btn btn-outline-secondary">
+				<i class="bi bi-x"></i>
+			</button>
+			<button type="button" id="flowsearch" class="btn btn-primary">
+				<span role="status">Search</span>
+				<span role="status" class="visually-hidden" aria-hidden="true">
+					<span role="status" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+					<span>Loading...</span>
+				</span>
+			</button>
+			</div>
+			<div id="filterstats" class="form-text fs-6">Enter filter the press Search</div>
+		</div>
+		</div>
+<!--
+		<div class="row">
+		<div class="col">
+			<label for="agent" class="form-label">Agent</label>
+			<input class="form-control" id="agent" aria-describedby="agenthelp" placeholder="*">
+			<div id="agenthelp" class="form-text">Flows from Agent</div>
+		</div>
+		<div class="col">
+			<label for="protocol" class="form-label">Protocol</label>
+			<input class="form-control" id="protocol" aria-describedby="protocolhelp" placeholder="*">
+			<div id="protocolhelp" class="form-text">Flows by Protocol</div>
+		</div>
+		<div class="col">
+			<label for="srcaddr" class="form-label">Source Address</label>
+			<input class="form-control" id="srcaddr" aria-describedby="srcaddrhelp" placeholder="*">
+			<div id="srcaddrhelp" class="form-text">Flows by Source Address</div>
+		</div>
+		<div class="col">
+			<label for="srcport" class="form-label">Source Port</label>
+			<input class="form-control" id="srcport" aria-describedby="srcporthelp" placeholder="*">
+			<div id="srcporthelp" class="form-text">Flows by Source Port</div>
+		</div>
+		<div class="col">
+			<label for="dstaddr" class="form-label">Destination Address</label>
+			<input class="form-control" id="dstaddr" aria-describedby="dstaddrhelp" placeholder="*">
+			<div id="dstaddrhelp" class="form-text">Flows by Destination Address</div>
+		</div>
+		<div class="col">
+			<label for="dstport" class="form-label">Destination Port</label>
+			<input class="form-control" id="dstport" aria-describedby="dstporthelp" placeholder="*">
+			<div id="dstporthelp" class="form-text">Flows by Destination Port</div>
+		</div>
+
+		</div>
+-->
+	</form>
+	</div>
+	<hr>
+<!-- graph -->
+	<div class="accordion m-2" id="graphcontainer">
+		<div class="accordion-item">
+			<h2 class="accordion-header">
+			<button id="graphbutton" class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#graphdata" aria-expanded="true" aria-controls="graphdata">
+				Graph&nbsp;&nbsp;&nbsp;
+				<div class="fs-7 fw-lighter opacity-50">(zoom: click+drag; pan: shift+click+drag; restore: double-click)</div>
+			</button>
+			</h2>
+			<div class="accordion-collapse collapse show" id="graphdata" data-bs-parent="#graphcontainer">
+				<div class="p-0 m-2" >
+					<div class="p-0 m-0" style="height: 300px;"  id="graphoutput"></div>
+				</div>
+				<div class="mb-2 ms-2">Legend: <span id="graphlegend" class="fs-6">&nbsp;</span> </div>
+			</div>
+		</div>
+	</div>
+<!-- flows -->
+	<div class="accordion m-2" id="flowlistcontainer">
+		<div class="accordion-item">
+			<h2 class="accordion-header">
+			<button id="flowlistbutton" class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flowlistdata" aria-expanded="false" aria-controls="flowlistdata"> Flows </button>
+			</h2>
+			<div class="accordion-collapse table-responsive collapse" id="flowlistdata" data-bs-parent="#flowlistcontainer">
+				<nav class="navbar">
+				<div class="w-100 mx-1">
+				<div id="flowpager" class="btn-group w-25" role="group" aria-label="flow navigation buttons">
+					<button type="button" class="btn btn-outline-secondary disabled"><i class="bi bi-chevron-bar-left"></i></button>
+					<button type="button" class="btn btn-outline-secondary disabled"><i class="bi bi-chevron-left"></i></button>
+					<input type="text" class="form-control" id="currentpage" value="0" disabled></button>
+					<button type="button" class="btn btn-outline-secondary disabled"><i class="bi bi-chevron-right"></i></button>
+					<button type="button" class="btn btn-outline-secondary disabled"><i class="bi bi-chevron-bar-right"></i></button>
+				</div>
+				<!--- dropdown to allow CSV download of flows -->
+				<button type="button" class="btn btn-outline-secondary float-end disabled"><i class="bi bi-three-dots"></i></button>
+				<div>
+				</nav>
+				<table class="table font-monospace table-hover" id="flowlist">
+					<thead class="mb-5"></thead>
+					<tbody class="table-group-divider"></tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+<script>
+const PROTO_NAMES = new Map([
+	[ "1",		"ICMP"],
+	[ "2",		"IGMP"],
+	[ "6",		"TCP"],
+	[ "17",		"UDP"],
+	[ "47",		"GRE"],
+	[ "50",		"ESP"],
+	[ "51",		"AH"],
+	[ "88",		"EIGRP"],
+	[ "89",		"OSPF"],
+	[ "103",	"PIM"],
+	[ "112",	"VRRP"],
+	[ "115",	"L2TP"],
+	[ "123",	"PTP"],
+	[ "124",	"ISIS"],
+	[ "137",	"MPLS"],
+	[ "240",	"PFSYNC"],
+]);
+
+const FLOW_FIELDS = new Map([
+	[ "received", 	{ "desc": "Flow Received", 	'checked': true , 'fil': undefined,	'sort': sortNumber}],
+	[ "duration", 	{ "desc": "Flow Duration",	'checked': false, 'fil': undefined,	'sort': sortNumber}],
+	[ "proto", 	{ "desc": "Protocol", 		'checked': true , 'fil': 'proto',	'sort': sortNumber}],
+	[ "srcAddr", 	{ "desc": "Source Address", 	'checked': true , 'fil': 'src ip',	'sort': sortIP}],
+	[ "srcPort", 	{ "desc": "Source Port", 	'checked': true , 'fil': 'src port',	'sort': sortNumber}],
+	[ "dstAddr", 	{ "desc": "Dest Address", 	'checked': true , 'fil': 'dst ip',	'sort': sortIP}],
+	[ "dstPort", 	{ "desc": "Dest Port", 		'checked': true , 'fil': 'dst port',	'sort': sortNumber}],
+	[ "TTL", 	{ "desc": "TTL", 		'checked': false, 'fil': 'ttl',		'sort': sortNumber}],
+	[ "icmpTYpe", 	{ "desc": "ICMP Type", 		'checked': false, 'fil': 'icmp type',	'sort': sortNumber}],
+	[ "icmpCode", 	{ "desc": "ICMP Code", 		'checked': false, 'fil': 'icmp code',	'sort': sortNumber}],
+	[ "packets", 	{ "desc": "Packets", 		'checked': true , 'fil': 'packets eq',	'sort': sortNumber}],
+	[ "bytes", 	{ "desc": "Bytes", 		'checked': true , 'fil': 'bytes eq',	'sort': sortNumber}],
+	[ "pps", 	{ "desc": "PPS", 		'checked': false, 'fil': 'pps eq',	'sort': sortNumber}],
+	[ "bps", 	{ "desc": "BPS", 		'checked': false, 'fil': 'bps eq',	'sort': sortNumber}],
+	[ "flags", 	{ "desc": "TCP Flags", 		'checked': false, 'fil': 'flags',	'sort': undefined}],
+	[ "tos", 	{ "desc": "TOS", 		'checked': false, 'fil': 'tos',		'sort': sortNumber}],
+]);
+
+class Flows {
+	#_flows;			// flows array of Maps
+	#_headers;			// headers array
+	length;				// filtered _flows length
+	#epoch_to_date(e) {
+		let a = e.split(".");
+		var d = new Date(0);
+		d.setUTCSeconds(a[0]);
+		if (a.length == 2) d.setUTCMilliseconds(a[1]);
+		return(d)
+	}
+	#comp_dates(a,b) {
+		let aa = a.get('received');
+		let bb = b.get('received');
+		if (aa.getTime() < bb.getTime())
+			return -1;
+		if (aa.getTime() > bb.getTime())
+			return 1;
+		return 0;
+	}
+	constructor(unparsed_flows) {
+		this._flows = Array();
+		this._headers = Array();
+		var flows = unparsed_flows.split("\n");
+		this._headers = flows.shift().split(','); // the first row is the header
+		if (flows[0] != "No matching flows") {
+			flows.forEach( (flo) => {
+				if (flo.length == 0) { return; }	// skip empty lines
+				var rec = new Map();
+				var fields = flo.split(",");
+				this._headers.forEach( (h, i) => {
+					if (h == "received") {
+						rec.set(h, this.#epoch_to_date(fields[i]));
+					} else {
+						rec.set(h, fields[i]);
+					}
+				});
+				rec.set('filter', true);
+				this._flows.push(rec);
+			});
+			// sort in case flows were recieved out-of-order
+			this._flows.sort(this.#comp_dates);
+		}
+		this.length = this._flows.length;
+	}
+	filter(cb_fn, ...args) {
+		this._flows.forEach((f) => {
+			if (cb_fn(f, ...args) == false) {
+				f.set('filter', false);
+			}
+		});
+		this.length = this.#gen_length();
+	}
+	#gen_length() {
+		let cnt = 0;
+		this._flows.forEach((f)=>{ if (f.get('filter') == true) { cnt +=1; } });
+		return(cnt);
+	}
+	reset_filter() {
+		this._flows.forEach((f)=>{ f.set('filter', true); });
+	}
+	forEach(callbackFn, thisArg) {
+		this._flows.forEach((f) => {
+			if (f.get("filter") == true)
+				callbackFn(f);
+		});
+	}
+	slice(start, end) {
+		console.log(`slice: ${start} ${end}`);
+		var tmp_arr = [];
+		var new_arr = [];
+		this._flows.forEach( (f) => {
+			if (f.get('filter') == true) {
+				tmp_arr.push(f);
+			}
+		});
+		new_arr = tmp_arr.slice(start,end);
+		tmp_arr=[];
+		return(new_arr);
+	}
+	find_ts(ts) {
+		let i, j;
+		for (i = 0,j = 0; i < this._flows.length; i++) {
+			if (this._flows[i].get('filter') == false) { // skip filtered values
+				continue;
+			}
+			let chk_ts = this._flows[i].get('received').getTime();
+//			console.log(`chk_ts: ${chk_ts}\n    ts: ${ts}`);
+			if (chk_ts >= ts) {
+				return(j);
+			}
+			j += 1;
+		}
+		return(0);
+	}
+	/*
+	 * functions to validate workings of class
+	 */
+	// validate the taht flows are in order
+	_flow_out_of_order() {
+		let i;
+		for(i = 1; i < this._flows.length-1; i++) {
+			let a = this._flows[i-1].get('received');
+			let b = this._flows[i].get('received');
+			if (a.getTime() > b.getTime())
+				return true;
+		}
+		return false;
+	}
+	// show the "real" length of the _flow array... not the filtered one
+	_length() {
+		return(this._flows.length);
+	}
+};
+var cacheflows=undefined;
+var cacheheaders=undefined;
+var searchtime=undefined;
+var dygraph=undefined;
+var flowsperpage=50;
+
+// sort functions
+function sortIP(a,b) {
+	return(0);
+}
+function sortNumber(a,b) {
+	return(0);
+}
+
+// set search button loading spinner
+function set_loading() {
+	elements = document.getElementById("flowsearch").children;
+	elements[0].classList.add("visually-hidden");
+	elements[1].classList.remove("visually-hidden");
+}
+// clear search button loading spinner
+function clear_loading() {
+	elements = document.getElementById("flowsearch").children;
+	elements[0].classList.remove("visually-hidden");
+	elements[1].classList.add("visually-hidden");
+}
+function set_time_type() {
+	var opt = document.getElementById('timetype').value
+	if ( opt == "range" ) {
+		document.getElementById('relativetimeselect').classList.add('d-none');
+		document.getElementById('rangetimeselect').classList.remove('d-none');
+	} else {
+		document.getElementById('relativetimeselect').classList.remove('d-none');
+		document.getElementById('rangetimeselect').classList.add('d-none');
+	}
+}
+// human time to seconds
+function human_to_sec(val) {
+	const re = /(\d+)([hdwm]?)/gm;
+	const arr = re.exec(val);
+	var ret = 0;
+	if (arr[2] == "h" ) {
+		ret = arr[1] * 3600;
+	} else if (arr[2] == "d" ) {
+		ret = arr[1] * 3600 * 24;
+	} else if (arr[2] == "w" ) {
+		ret = arr[1] * 3600 * 24 * 7;
+	} else if (arr[2] == "m" ) {
+		ret = arr[1] * 3600 * 24 * 30;
+	} else {
+		ret = arr[1] * 60;
+	}
+	return(ret);
+}
+function get_checked_fields() {
+	const fdd = document.getElementById('fieldsdropdown');
+	var ret = new Array();
+	var cbs = fdd.getElementsByClassName('form-check-input');
+	for (var c = 0; c < cbs.length; c++) {
+		if (cbs.item(c).checked) {
+			ret.push(cbs.item(c).value);
+		}
+	};
+	return(ret);
+}
+async function cache_filter_cb(fld,val) {
+// XXX tried to set the flowlistbutton text to a spinner when processing a large filter... didn't seem to work.
+//	set_flowlistbutton('<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div>');
+	const fs = document.getElementById('filterstats');
+	if (fs.innerHTML.includes("cached") == false) { fs.innerHTML = fs.innerHTML+" (cached)"; }
+	const filter = document.getElementById('filter');
+	var filter_n = ""
+	switch (fld) {
+		case "proto":
+			filter_n = FLOW_FIELDS.get(fld).fil+" "+(PROTO_NAMES.has(val) ? PROTO_NAMES.get(val) : val);
+			break;
+		default:
+			filter_n = FLOW_FIELDS.get(fld).fil+" "+val;
+			break;
+	}
+	if (filter.value.length == 0) {
+		filter.value = filter_n;
+	} else {
+		if (filter.value.includes(filter_n) == false) {
+			filter.value = [filter.value, filter_n].join(" and ");
+		} else {
+			// no changes... just return
+			return;
+		}
+	}
+	load_flows({'field_name':fld, 'field_val': val});
+}
+function test_filter(flo, filter_f, filter_v) {
+	if (typeof flo === 'undefined' ||
+	    typeof filter_f === 'undefined' ||
+	    typeof filter_v === 'undefined' ||
+	    typeof filter_f.length == 0 ||
+	    typeof filter_v.length == 0 ) {
+		// since we don't have anything to test for... how can we fail?
+		return true;
+	}
+	// if flow has already been filtered... just ignore
+	if (flo.get('filter') == false) { return false; }
+	// test the flow for inclusion
+	if (flo.has(filter_f) == true && flo.get(filter_f) == filter_v) { return true; }
+	// no match... exlude and return
+	return false;
+}
+function fixup_date(d) {
+	return(d);
+/*
+	return(
+		d.getUTCFullYear()+"/"+
+		Number(d.getUTCMonth()+1).toString().padStart(2,"0")+"/"+
+		d.getUTCDay().toString().padStart(2,"0")+" "+
+		d.getUTCHours().toString().padStart(2,"0")+":"+
+		d.getUTCMinutes().toString().padStart(2,"0")+":"+
+		d.getUTCSeconds().toString().padStart(2,"0")
+		+"."+
+		d.getUTCMilliseconds().toString()
+	);
+*/
+}
+function comp_flow(a, b) {
+	if (a[0].getTime() < b[0].getTime())
+		return -1;
+	if (a[0].getTime() > b[0].getTime())
+		return 1;
+	return 0;
+}
+function compare_date(a,b) {
+	const v = (a.getTime() === b.getTime());
+	if (a.getTime() > b.getTime())
+		console.error(`dates go backwards: ${a.getTime()} > ${b.getTime()}`);
+	return(v);
+}
+/*
+ * dygraph data expect one timestamp per record. netflow records can have
+ * the same timestamp.  This function will add up the fields if the timestamps
+ * match.
+ */
+function gen_graph_data() {
+	var data = new Array();
+	cacheflows.forEach((f) => {
+		var t = [fixup_date(f.get('received')),Number(f.get('bytes')),Number(f.get('packets'))];
+		if (data.length > 0 && compare_date(data[data.length-1][0],t[0]) == true) {	// times match
+			data[data.length-1][1] += t[1];
+			data[data.length-1][2] += t[2];
+		} else {									// times !match
+			data.push(t);
+		}
+	});
+//	data.sort(comp_flow);
+	console.log("gen_graph_data returned "+data.length);
+	return(data)
+}
+function graph_zoom(mints, maxts, points) {
+	console.log("graph_zoom");
+	load_flows({'timestamp': mints });
+}
+function graph_click(evt, ts, point) {
+	console.log("graph_click");
+	load_flows({'timestamp': ts });
+}
+/*
+ * retrun true if graph element is visible
+ */
+function graph_visible() {
+	const e = document.getElementById('graphdata');
+	if ( typeof e === 'undefined' ) return false;
+	return (e.classList.entries().toArray().flat().includes('show'))
+}
+function graph_legend_formatter(data) {
+	let ret = "";
+	if (data.x == null) {
+		ret = data.series.map(v => `<span style="color: ${v.color};">${v.label}</span>`).join(' ');
+	} else {
+		ret = data.xHTML + " " + data.series.map(v => `<span style="color: ${v.color};">${v.label}:</span> ${v.yHTML}`).join('&nbsp;&nbsp;');
+	}
+	return(ret);
+}
+/*
+ * function to build the current graph.
+ * should be called whenever the data is refreshed.
+ */
+async function build_graph(gtype) {
+	console.log("build_graph: called");
+	if (typeof gtype === "undefined") gtype = "flows";
+	const go = document.getElementById('graphoutput');
+	if ( typeof go === 'undefined') {
+		console.error("build_graph: could not find '#graphoutput' element");
+		return;
+	}
+	if (graph_visible() == false) {
+		console.log("build_graph: element hidden. aborting");
+		return;
+	}
+	var data = gen_graph_data();
+	if (data.length == 0) {
+		console.log("no data to graph");
+		return;
+	} else {
+		console.log(`graphing ${data.length} points`);
+	}
+	var dyconfig = {};
+	if (typeof dygraph === 'undefined') {
+		dyconfig = {
+// when specified caused problem when zooming in... but just the first time.
+//			dateWindow: [data[0][0], data[data.length-1][0]], // set the date window to the all flows
+			labels: ["Date", "Bytes", "Packets" ],
+			legend: 'always',
+			xlabel: "Time",
+			ylabel: "Bytes/s",
+			y2label: "Packets/s",
+			labelsDiv: 'graphlegend',
+			strokeWidth: 1,
+			stackedGraph: false,
+			labelsSeparateLines: true,
+			legendFormatter: graph_legend_formatter,
+			clickCallback: graph_click,
+			zoomCallback: graph_zoom,
+//			xRangePad: 20,
+//			yRangePad: 20,
+			axes: {
+				y: {
+					logscale: false,
+					fillGraph: true,
+					labelsKMG2: true,
+				},
+				y2: {
+//					drawAxis: true,
+//					logscale: true,
+					fillGraph: false,
+					labelsKMB: true,
+				}
+			},
+			series: {
+				'Bytes': {
+//					highlightSeriesBackgroundColor: "rgb(128,128,128)",
+//					highlightSeriesBackgroundAlpha: 0.0,
+					highlightCircleSize: 5,
+				},
+				'Packets': {
+//					highlightSeriesBackgroundAlpha: 1.0,
+					highlightCircleSize: 3,
+				},
+			},
+/*
+				strokeWidth: 2,
+				strokeBorderWidth: 1,
+				highlightCircleSize: 5,
+				highlightSeriesBackgroundAlpha: 0.0,
+//				highlightSeriesBackgroundColor: rgb(128,128,128),
+			},
+*/
+//			resizable: true,
+//			labelsKMB: true,
+//			showRangeSelector: true,
+//			labelsSeparateLines: true,
+//			stepPlot: true,
+//			zoneCallback: graph_zoom,
+//			clickCallback: graph_click,
+//			rangeSelectorAlpha: 0.3,
+//			rangeSelectorForegroundStrokeColor: "yellow",
+//			rangeSelectorPlotStrokeColor: '#888888',
+//			rangeSelectorPlotFillColor: '#cccccc',
+		};
+		dygraph = new Dygraph(go, data, dyconfig);
+	} else {
+		dyconfig = {
+			file: data,
+			dateWindow: [data[0][0], data[data.length-1][0]], // reset the date window
+		};
+		dygraph.updateOptions(dyconfig);
+	}
+	dygraph.updateOptions(dyconfig);
+}
+async function load_headers() {
+	const flowlist = document.getElementById('flowlist');
+	const thead = flowlist.getElementsByTagName('thead')[0];
+	while(thead.firstChild) { thead.removeChild(thead.firstChild); } // removed all existing rows
+	fields = get_checked_fields();
+	fields.forEach( (f) => {
+		var th = document.createElement("th");
+		th.innerHTML = FLOW_FIELDS.get(f).desc;
+		th.classList.add('col');
+		th.classList.add('fs-5');
+		thead.appendChild(th);
+	});
+}
+async function change_page(page) {
+	load_flows({'page': page});
+}
+async function load_flowpager(currentpage) {
+	if (typeof currentpage === 'undefined') currentpage = 1;
+	const fp = document.getElementById('flowpager');
+	var lastpage = Math.floor(cacheflows.length / flowsperpage) + 1;
+	console.log(`currentpage: ${currentpage} lastpage: ${lastpage}`);
+	while(fp.firstChild) { fp.removeChild(fp.firstChild); } // removed all existing buttons
+	if (currentpage > lastpage) currentpage = lastpage;
+	if (currentpage < 1) currentpage = 1;
+	// start button
+	var sb = document.createElement("button");
+	sb.classList.add('btn');
+	sb.classList.add('btn-outline-secondary');
+	sb.innerHTML='<i class="bi bi-chevron-bar-left"></i>';
+	sb.addEventListener("click", (evt) => { change_page(1); });
+	if (currentpage <= 1) {
+		sb.classList.add('disabled');
+	} else {
+		sb.addEventListener("click", (evt) => { change_page(currentpage-1); });
+	}
+	fp.appendChild(sb)
+	// prev button
+	var pb = document.createElement("button");
+	pb.classList.add('btn');
+	pb.classList.add('btn-outline-secondary');
+	pb.innerHTML='<i class="bi bi-chevron-left"></i>';
+	if (currentpage < 2) {
+		pb.classList.add('disabled');
+	} else {
+		pb.addEventListener("click", (evt) => { change_page(currentpage-1); });
+	}
+	fp.appendChild(pb)
+
+	// current button
+	var cb = document.createElement("input");
+	cb.classList.add('form-control');
+	cb.setAttribute("type", "text");
+	cb.setAttribute("id", "currentpage");
+	cb.value=currentpage
+	cb.addEventListener("keypress", (evt) => {
+		if (evt.key === "Enter") {
+			evt.preventDefault();
+			change_page(document.getElementById("currentpage").value);
+		}
+	});
+	fp.appendChild(cb)
+
+	//next button
+	var nb = document.createElement("button");
+	nb.classList.add('btn');
+	nb.classList.add('btn-outline-secondary');
+	nb.innerHTML='<i class="bi bi-chevron-right"></i>';
+	if (currentpage > lastpage-1) {
+		nb.classList.add('disabled');
+	} else {
+		nb.addEventListener("click", (evt) => { change_page(currentpage+1); });
+	}
+	fp.appendChild(nb)
+	// end button
+	var eb = document.createElement("button");
+	eb.classList.add('btn');
+	eb.classList.add('btn-outline-secondary');
+	eb.innerHTML='<i class="bi bi-chevron-bar-right"></i>';
+	if (currentpage >= lastpage) {
+		eb.classList.add('disabled');
+	} else {
+		eb.addEventListener("click", (evt) => { change_page(lastpage); });
+	}
+	fp.appendChild(eb)
+	
+}
+async function load_flows(opts) {
+	var lft = Date.now();
+	if (typeof opts === 'undefined') opts = { 'page': 1,
+						'order': 'asc',
+						'field_name': undefined,
+						'field_val': undefined,
+						'timestamp': undefined
+					};
+	if (typeof opts['page'] === 'undefined') opts['page'] = 1;
+	if (typeof opts['order'] === 'undefined') opts['order'] = 'asc';
+	var lastpage = Math.floor(cacheflows.length / flowsperpage) + 1;	// get last page
+	if (typeof opts['timestamp'] !== 'undefined') {
+		let i = cacheflows.find_ts(opts['timestamp']);
+		x = Math.floor(i / cacheflows.length * lastpage);
+//		console.log(`i: ${i}/${cacheflows.length}  ts2p: ${x} lastpage: ${lastpage}`);
+		opts['page'] = x;
+	}
+	cacheflows.filter(test_filter, opts['field_name'], opts['field_val']);	// filter flows if required
+	if (opts['page'] > lastpage) opts['page'] = lastpage;			// check bounds for last page
+	if (opts['page'] < 1) opts['page'] = 1;					// check bounds for current page
+	var start = (opts['page']-1) * flowsperpage;				// get number of flows
+	var offset = opts['page'] * flowsperpage;				// last flow to get
+
+	const flowlist = document.getElementById('flowlist');
+	const tbody = flowlist.getElementsByTagName('tbody')[0];
+	while(tbody.firstChild) { tbody.removeChild(tbody.firstChild); }	// removed all existing rows
+	load_flowpager(opts['page']);						// reload the pager controls
+/*
+	if (typeof order !== 'undefined' && FLOWS_SORT[order] !== 'undefined') {
+		cacheflows = cacheflows.sort(FLOWS_SORT[order]);
+	}
+*/
+	var subset = cacheflows.slice(start, offset);
+//	console.log(`cacheflows.length: ${cacheflows.length} subset.length: ${subset.length}`);
+	subset.forEach( (flo) => {
+		var tr = document.createElement("tr");
+		var fields = get_checked_fields();
+		fields.forEach( (fld) => {
+			var td = document.createElement("td");
+			td.classList.add('col');
+			td.classList.add('fs-6');
+			var v = flo.has(fld) ? flo.get(fld) : "";
+			switch (fld) {
+				case "received":
+					td.innerHTML = v.toISOString();
+					break;
+				case "proto":
+					var a = document.createElement("a");
+					a.setAttribute('href','#')
+					a.addEventListener('click', (evt) => {
+						cache_filter_cb(fld,v);
+					});
+					a.innerHTML = PROTO_NAMES.has(v) ? PROTO_NAMES.get(v) : v;
+					td.appendChild(a);
+					break;
+				default:
+					var a = document.createElement("a");
+					a.setAttribute('href','#')
+					a.addEventListener('click', (evt) => {
+						cache_filter_cb(fld,v);
+					});
+					a.innerHTML = v
+					td.appendChild(a);
+					break;
+			}
+			tr.appendChild(td);
+		});
+		tbody.appendChild(tr);
+	});
+	subset=[];
+	set_flowlistbutton(cacheflows.length);
+	lft = Date.now() - lft;	
+	console.log(`load_flows time: ${lft}ms`);
+	// build the graph
+	build_graph();
+}
+async function parse_flows(csvtext) {
+	var pstart = Date.now();
+	var ms = pstart - searchtime;
+	cacheflows = undefined;		// delete the old flows... if exists
+	cacheflows = new Flows(csvtext);
+	var pms = Date.now() - pstart;
+	console.log(`parse records: ${pms}ms`);
+	set_filterstats('returned '+cacheflows.length+" flows in "+ms+"ms");
+	load_headers();
+	load_flows();
+}
+// Hookup fields selector
+async function hookup_fields_selector() {
+	const odd = document.getElementById("fieldsdropdown");
+/*(
+<li>
+	<div class="dropdown-item input-group-text">
+	<div class="form-check">
+	<input class="form-check-input" id="label1" type="checkbox" value="" aria-label="Checkbox for following text input">
+	<label class="form-check-label" for="label1">checkbox description</label>
+	</div>
+	</div>
+</li>
+*/
+	FLOW_FIELDS.keys().forEach( (f) => {
+		var li = document.createElement("li");
+		var di = document.createElement("div");
+		di.classList.add('dropdown-item');
+		di.classList.add('input-group-text');
+		var fc = document.createElement("div");
+		fc.classList.add('form-check');
+		var cb = document.createElement("input");
+		cb.classList.add('form-check-input');
+		cb.setAttribute('type', 'checkbox');
+		cb.setAttribute('id', 'fld-'+f);
+		cb.setAttribute('value', f);
+		cb.setAttribute('aria-label', FLOW_FIELDS.get(f).desc);
+		cb.checked = FLOW_FIELDS.get(f).checked;
+		cb.addEventListener('click', (evt) => {
+			const current_page = document.getElementById('currentpage').value;
+			load_headers();
+			load_flows({'page': current_page });
+		});
+		var lb = document.createElement("label");
+		lb.classList.add('form-check-label');
+		lb.setAttribute('for', 'fld-'+f);
+		lb.innerHTML = FLOW_FIELDS.get(f).desc;
+		// connect the elements
+		fc.appendChild(cb);
+		fc.appendChild(lb);
+		di.appendChild(fc);
+		li.appendChild(di);
+		odd.appendChild(li);
+	});
+}
+async function set_filterstats(value) {
+	const filterstats = document.getElementById('filterstats');
+	filterstats.innerHTML = value;
+}
+async function set_flowlistbutton(val) {
+	if (typeof val === 'undefined') {
+		val = "???";
+	}
+	const flb = document.getElementById('flowlistbutton');
+	flb.innerHTML="Flows ("+val+")";
+}
+async function send_search() {
+	set_filterstats('loading...');
+	set_loading();
+	var data=[];
+	var tt = document.getElementById('timetype').value;
+	data.push("timetype="+tt);
+	if (tt == "relative") {
+		ts = Number(human_to_sec(document.getElementById('relativetime').value));
+		nts = Math.floor(ts / 60); // get minutes
+		data.push("reltime="+nts);
+	} else {
+		st = Math.floor(Date.parse(
+			document.getElementById('startdate').value+" "+
+			document.getElementById('starttime').value
+		).valueOf() / 1000);
+		et = Math.floor(Date.parse(
+			document.getElementById('enddate').value+" "+
+			document.getElementById('endtime').value
+		).valueOf() / 1000);
+		data.push("starttime="+st);
+		data.push("endtime="+et);
+	}
+	data.push("filter="+document.getElementById('filter').value);
+	query = new XMLHttpRequest();
+	query.onload = function() {
+		if (query.readyState === 4) {
+			if (query.status === 200) {
+				parse_flows(this.responseText);
+			} else {
+				console.error(query.statusText);
+			}
+			clear_loading()
+		}
+	}
+	query.onerror = () => {
+		console.error(query.statusText);
+		clear_loading()
+	};
+	query.ontimeout = () => {
+		console.error("requet timeout");
+		clear_loading()
+	};
+	searchtime = Date.now();
+	query.open("POST", "nfquery.cgi", true);
+	query.send(data.join("&"));
+}
+// Hookup clear button
+document.getElementById("clearsearch").addEventListener("click", btnElem => {
+	console.log('clear pressed');
+	const filter = document.getElementById('filter');
+	filter.value = "";
+	cacheflows.reset_filter();
+	load_flows();
+});
+// Hookup search button
+document.getElementById("flowsearch").addEventListener("click", btnElem => {
+	console.log('search pressed');
+	send_search();
+});
+// Hookup time type selector
+document.getElementById("timetype").addEventListener("change", (evt) => {
+	console.log('timetype changed');
+	set_time_type()
+});
+// Hookup relative timeframe selector
+document.querySelectorAll("#relativetimedropdown .dropdown-item").forEach((elem) => {
+	elem.addEventListener("click", (evt) => {
+		console.log('relative time selected');
+		el = evt.target.dataset.value;
+		reltime = document.getElementById("relativetime")
+		reltime.value = el;
+	});
+});
+// Hookup filter field key==Enter
+document.getElementById('filter').addEventListener("keypress", (evt) => {
+	if (evt.key === "Enter") {
+		evt.preventDefault();
+		send_search();
+	}
+});
+// Hookup relative timeframe key==Enter
+document.getElementById('relativetime').addEventListener("keypress", (evt) => {
+	if (evt.key === "Enter") {
+		evt.preventDefault();
+		send_search();
+	}
+});
+
+// initialize the doc
+window.addEventListener("load", () => {
+	set_time_type();
+	hookup_fields_selector();
+	load_headers();
+});
+
+</script>
+</body>
+</html>

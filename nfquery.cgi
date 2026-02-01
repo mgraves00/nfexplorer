@@ -130,37 +130,6 @@ function query_value {
 	return 1
 }
 
-function to_json {
-	local _k=$1; shift
-	local _v=$*
-	if [ `is_cgi` -eq 1 ]; then
-		add_header "Content-type" "application/json"
-		add_header "Pragma" "off"
-		add_header "Cache-control" "no-cache, no-store, must-revalidate"
-		add_header "Expires" "0"
-		print_header
-		echo "{ \"$_k\": \"$_v\" }"
-	else
-		echo $_k $_v
-	fi
-}
-
-function list_to_json {
-	local _l=$*
-	local _v=`echo $_l | sed -nr 's/([^ ]+)/\"\1\"/pg' | sed -nr '/ +/ { s/ +/, /g }; p'`
-	printf "[ %s ]" "$_v"
-}
-
-function error {
-	to_json "result" "error $*"
-	exit 0
-}
-
-function success {
-	to_json "result" $*
-	exit 0
-}
-
 function build_filter {
 	local _fil="ipv4"
 	local _v

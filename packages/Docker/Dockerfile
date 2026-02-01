@@ -3,7 +3,7 @@ FROM alpine:latest AS nfexplorer
 MAINTAINER <mg@>
 EXPOSE 8080
 
-RUN apk add --no-cache nginx
+RUN apk add --no-cache nginx nfdump
 
 WORKDIR /app
 

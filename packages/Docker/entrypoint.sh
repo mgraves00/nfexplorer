@@ -19,6 +19,10 @@ if [ ! -f /app/config/nginx.conf ]; then
 	cp /app/nginx.conf.dist /app/config/nginx.conf
 	chown nginx:nginx /app/config/nginx.conf
 fi
+if [ ! -f /app/config/nfquery.env ]; then
+	cp /app/nfquery.env.dist /app/config/nfquery.env
+	chown nginx:nginx /app/config/nfquery.env
+fi
 
 # start  nginx
 #

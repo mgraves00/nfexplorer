@@ -1,0 +1,5 @@
+# ignore the app files
+Makefile
+index.html
+nfquery.cgi
+nfquery.env

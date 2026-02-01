@@ -5,8 +5,13 @@ _CGI_sent_header=0
 _prepare_qs=0
 _saved_QUERY_STRING=""
 
+NFDUMP=`which nfdump`
+SED=`which sed`
+XARGS=`which xargs`
+DATE=`which date`
+
 function find_env {
-	LIST="/etc/nfquery.env .nfquery.env"
+	LIST="/app/config/nfquery.env /etc/nfquery.env .nfquery.env"
 	for f in ${LIST} ; do
 		if [ -f "$f" ]; then
 			echo $f
@@ -23,7 +28,7 @@ function urldecode {
 		echo ""
 		return 1
 	fi
-	echo -n ${_e} | sed -e 's@+@ @g; s@%@\\x@g;' | xargs -0 printf "%b"
+	echo -n ${_e} | ${SED} -e 's@+@ @g; s@%@\\x@g;' | ${XARGS} -0 printf "%b"
 	return 0
 }
 
@@ -186,6 +191,29 @@ function build_filter {
 	return 0
 }
 
+function gen_epoch {
+	local _val=`${DATE} +"%s"`
+	echo $_val
+}
+
+function gen_date {
+	local _epoch=$1; shift
+	local _fmt=$*
+	_val=""
+	case "$(uname)" in
+	'OpenBSD')
+		_val=`${DATE} -j ${_epoch} +"$_fmt"`
+		;;
+	'Linux')
+		_val=`${DATE} -d @${_epoch} +"$_fmt"`
+		;;
+	*)
+		_val=`${DATE} -r${_epoch} +"$_fmt"`
+		;;
+	esac
+	echo $_val
+}
+
 
 ### TODO
 # Add -O order option
@@ -215,34 +243,29 @@ if [ -z "${reltime}" ]; then
 	starttime=`query_value "starttime"`
 	endtime=`query_value "endtime"`
 	if [ -z "${starttime}" -o -z "${endtime}" ]; then
-		endtime=`date +"%s"`
+		endtime=`gen_epoch`
 		starttime=$((endtime - 60))
 	fi
 else
 	reltime=$((reltime * 60))
-	endtime=`date +"%s"`
+	endtime=`gen_epoch`
 	starttime=$((endtime - ${reltime}))
 fi
-starttime=`date -j -r${starttime} +"%Y/%m/%d.%H:%M:%S"`
-endtime=`date -j -r${endtime} +"%Y/%m/%d.%H:%M:%S"`
+starttime=`gen_date ${starttime} "%Y/%m/%d.%H:%M:%S"`
+endtime=`gen_date ${endtime} "%Y/%m/%d.%H:%M:%S"`
 TIMERANGE="-t ${starttime}-${endtime}"
 
-#OUTPUT_FMT="fmt:%ts %te %td %sa %sp %da %dp %ttl %it %ic %pkt %byt %pps %bps %flg %tos"
-OUTPUT_FMT="csv:%trr,%td,%pr,%sa,%sp,%da,%dp,%ttl,%it,%ic,%pkt,%byt,%pps,%bps,%flg,%tos"
+OUTPUT_FMT="csv:%trr,%td,%pr,%sa,%sp,%da,%dp,%it,%ic,%pkt,%byt,%pps,%bps,%flg,%tos"
 
 add_header "Content-type" "application/text"
 print_header
 
-#flow_args="-q -r /var/db/nfsen/profiles-data/live/"
 flow_args="-q -r ${FLOW_DIR}"
 filter=`query_value "filter"`
 if [ $? -ne 0 ]; then
 	filter=`build_filter`
 fi
 
-#if [ `is_cgi` -eq 1 ]; then
-#	echo /usr/local/bin/nfdump $flow_args ${TIMERANGE} -o "${OUTPUT_FMT}" "$filter"
-#fi
-echo "/usr/local/bin/nfdump $flow_args ${TIMERANGE} -o \"${OUTPUT_FMT}\" \"$filter\"" >> /tmp/query.log
-/usr/local/bin/nfdump $flow_args ${TIMERANGE} -o "${OUTPUT_FMT}" "$filter"
+#echo "${NFDUMP} $flow_args ${TIMERANGE} -o \"${OUTPUT_FMT}\" \"$filter\"" >> /tmp/query.log
+${NFDUMP} $flow_args ${TIMERANGE} -o "${OUTPUT_FMT}" "$filter"
 

@@ -15,8 +15,8 @@ RUN chown nginx:nginx logs
 COPY nginx.conf nginx.conf.dist
 COPY index.html index.html
 COPY nfquery.env nfquery.env.dist
-COPY --chmod 755 nfquery.cgi nfquery.cgi
-COPY --chmod 755 entrypoint.sh entrypoint.sh
+COPY --chmod=755 nfquery.cgi nfquery.cgi
+COPY --chmod=755 entrypoint.sh entrypoint.sh
 
 VOLUME flow-data
 VOLUME config

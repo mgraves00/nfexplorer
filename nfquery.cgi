@@ -255,7 +255,7 @@ starttime=`gen_date ${starttime} "%Y/%m/%d.%H:%M:%S"`
 endtime=`gen_date ${endtime} "%Y/%m/%d.%H:%M:%S"`
 TIMERANGE="-t ${starttime}-${endtime}"
 
-OUTPUT_FMT="csv:%trr,%td,%pr,%sa,%sp,%da,%dp,%it,%ic,%pkt,%byt,%pps,%bps,%flg,%tos"
+OUTPUT_FMT="csv:%trr,%td,%ra,%pr,%sa,%sp,%da,%dp,%it,%ic,%pkt,%byt,%pps,%bps,%flg,%tos"
 
 add_header "Content-type" "application/text"
 print_header

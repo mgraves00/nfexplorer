@@ -161,11 +161,8 @@
 			</button>
 			</h2>
 			<div class="accordion-collapse collapse show" id="graphdata" data-bs-parent="#graphcontainer">
-				<div class="p-0 m-2" >
-					<div class="p-0 m-0" style="height: 300px;"  id="graphoutput"></div>
-				</div>
 				<div class="row p-0 m-2">
-					<div col="col">
+					<div class="col">
 						<label for="graph-stack-group" class="form-label">Stack Select</label>
 						<div class="input-group">
 							<div>
@@ -177,6 +174,11 @@
 								<label class="btn btn-outline-primary" for="ps2">Stacked</label>
 							</div>
 						</div>
+					</div>
+				</div>
+				<div class="row p-0 m-2">
+					<div class="col p-0 m-0">
+						<div class="" style="height: 300px;"  id="graphoutput"></div>
 					</div>
 				</div>
 				<div class="row p-0 m-2">
@@ -238,20 +240,20 @@ const PROTO_NAMES = new Map([
 const FLOW_FIELDS = new Map([
 	[ "received", 	{ "desc": "Flow Received", 	'checked': true , 'fil': undefined,	'sort': sortNumber}],
 	[ "duration", 	{ "desc": "Flow Duration",	'checked': false, 'fil': undefined,	'sort': sortNumber}],
-	[ "proto", 	{ "desc": "Protocol", 		'checked': true , 'fil': 'proto',	'sort': sortNumber}],
+	[ "proto", 		{ "desc": "Protocol", 		'checked': true , 'fil': 'proto',	'sort': sortNumber}],
 	[ "srcAddr", 	{ "desc": "Source Address", 	'checked': true , 'fil': 'src ip',	'sort': sortIP}],
 	[ "srcPort", 	{ "desc": "Source Port", 	'checked': true , 'fil': 'src port',	'sort': sortNumber}],
 	[ "dstAddr", 	{ "desc": "Dest Address", 	'checked': true , 'fil': 'dst ip',	'sort': sortIP}],
 	[ "dstPort", 	{ "desc": "Dest Port", 		'checked': true , 'fil': 'dst port',	'sort': sortNumber}],
-	[ "TTL", 	{ "desc": "TTL", 		'checked': false, 'fil': 'ttl',		'sort': sortNumber}],
+	[ "TTL", 		{ "desc": "TTL", 		'checked': false, 'fil': 'ttl',		'sort': sortNumber}],
 	[ "icmpTYpe", 	{ "desc": "ICMP Type", 		'checked': false, 'fil': 'icmp type',	'sort': sortNumber}],
 	[ "icmpCode", 	{ "desc": "ICMP Code", 		'checked': false, 'fil': 'icmp code',	'sort': sortNumber}],
 	[ "packets", 	{ "desc": "Packets", 		'checked': true , 'fil': 'packets eq',	'sort': sortNumber}],
-	[ "bytes", 	{ "desc": "Bytes", 		'checked': true , 'fil': 'bytes eq',	'sort': sortNumber}],
-	[ "pps", 	{ "desc": "PPS", 		'checked': false, 'fil': 'pps eq',	'sort': sortNumber}],
-	[ "bps", 	{ "desc": "BPS", 		'checked': false, 'fil': 'bps eq',	'sort': sortNumber}],
-	[ "flags", 	{ "desc": "TCP Flags", 		'checked': false, 'fil': 'flags',	'sort': undefined}],
-	[ "tos", 	{ "desc": "TOS", 		'checked': false, 'fil': 'tos',		'sort': sortNumber}],
+	[ "bytes", 		{ "desc": "Bytes", 		'checked': true , 'fil': 'bytes eq',	'sort': sortNumber}],
+	[ "pps", 		{ "desc": "PPS", 		'checked': false, 'fil': 'pps eq',	'sort': sortNumber}],
+	[ "bps", 		{ "desc": "BPS", 		'checked': false, 'fil': 'bps eq',	'sort': sortNumber}],
+	[ "flags", 		{ "desc": "TCP Flags", 		'checked': false, 'fil': 'flags',	'sort': undefined}],
+	[ "tos", 		{ "desc": "TOS", 		'checked': false, 'fil': 'tos',		'sort': sortNumber}],
 ]);
 
 class Flows {
@@ -577,6 +579,7 @@ function get_stack_select() {
  */
 async function build_graph(gtype) {
 	console.log("build_graph: called");
+	if (typeof cacheflows === 'undefined') return;
 	if (typeof gtype === "undefined") gtype = "flows";
 	const go = document.getElementById('graphoutput');
 	if ( typeof go === 'undefined') {

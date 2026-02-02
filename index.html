@@ -164,7 +164,26 @@
 				<div class="p-0 m-2" >
 					<div class="p-0 m-0" style="height: 300px;"  id="graphoutput"></div>
 				</div>
-				<div class="mb-2 ms-2">Legend: <span id="graphlegend" class="fs-6">&nbsp;</span> </div>
+				<div class="row p-0 m-2">
+					<div col="col">
+						<label for="graph-stack-group" class="form-label">Stack Select</label>
+						<div class="input-group">
+							<div>
+							</div>
+							<div class="btn-group" id="graph-stack-group" role="group" aria-label="graph-stack-group">
+								<input type="radio" class="btn-check" id="ps1" name="graph-stack" autocomplete="off" checked>
+								<label class="btn btn-outline-primary" for="ps1">Combined</label>
+								<input type="radio" class="btn-check" id="ps2" name="graph-stack" autocomplete="off">
+								<label class="btn btn-outline-primary" for="ps2">Stacked</label>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="row p-0 m-2">
+					<div class="col-12">
+						<div class="">Legend: <span id="graphlegend" class="fs-6">&nbsp;</span> </div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -490,7 +509,17 @@ function compare_date(a,b) {
  * the same timestamp.  This function will add up the fields if the timestamps
  * match.
  */
-function gen_graph_data() {
+function gen_graph_data(type, stacked) {
+	if (typeof type === 'undefined') type="flow";
+	if (typeof stacked === 'undefined') stacked="false";
+/*
+ XXX generate data that is stacked or combined
+
+ type == 'flows' or 'protocol'  stack on 'protocol'
+ type == 'address'  stack on address (source or dest???)
+ type == 'port'		stack on port (soure or dest???)
+
+*/
 	var data = new Array();
 	cacheflows.forEach((f) => {
 		var t = [fixup_date(f.get('received')),Number(f.get('bytes')),Number(f.get('packets'))];
@@ -530,6 +559,18 @@ function graph_legend_formatter(data) {
 	}
 	return(ret);
 }
+// return false if data combined
+// return true if data stacked
+function get_stack_select() {
+	var gsl = document.getElementById('graph-stack-group');
+	if (typeof gsl === 'undefined') { return(false); }
+	var rbs = gsl.querySelectorAll('input[name="graph-stack"]');
+	if (rbs.lentgh != 2) { return(false); }
+	if (rbs[0].checked == true) {
+		return(false);
+	}
+	return(true);
+}
 /*
  * function to build the current graph.
  * should be called whenever the data is refreshed.
@@ -546,7 +587,8 @@ async function build_graph(gtype) {
 		console.log("build_graph: element hidden. aborting");
 		return;
 	}
-	var data = gen_graph_data();
+	var stacked = get_stack_select();
+	var data = gen_graph_data(gtype,stacked);
 	if (data.length == 0) {
 		console.log("no data to graph");
 		return;
@@ -565,7 +607,7 @@ async function build_graph(gtype) {
 			y2label: "Packets/s",
 			labelsDiv: 'graphlegend',
 			strokeWidth: 1,
-			stackedGraph: false,
+			stackedGraph: stacked,
 			labelsSeparateLines: true,
 			legendFormatter: graph_legend_formatter,
 			clickCallback: graph_click,
@@ -786,7 +828,7 @@ async function load_flows(opts) {
 	lft = Date.now() - lft;	
 	console.log(`load_flows time: ${lft}ms`);
 	// build the graph
-	build_graph();
+//	build_graph();
 }
 async function parse_flows(csvtext) {
 	var pstart = Date.now();
@@ -798,6 +840,7 @@ async function parse_flows(csvtext) {
 	set_filterstats('returned '+cacheflows.length+" flows in "+ms+"ms");
 	load_headers();
 	load_flows();
+	build_graph();
 }
 // Hookup fields selector
 async function hookup_fields_selector() {
@@ -907,6 +950,7 @@ document.getElementById("clearsearch").addEventListener("click", btnElem => {
 	filter.value = "";
 	cacheflows.reset_filter();
 	load_flows();
+	build_graph();
 });
 // Hookup search button
 document.getElementById("flowsearch").addEventListener("click", btnElem => {
@@ -940,6 +984,11 @@ document.getElementById('relativetime').addEventListener("keypress", (evt) => {
 		evt.preventDefault();
 		send_search();
 	}
+});
+// Hookup Stack Select
+document.getElementById('graph-stack-group').addEventListener("click", (evt) => {
+	evt.preventDefault();
+	build_graph();
 });
 
 // initialize the doc

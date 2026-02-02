@@ -202,7 +202,7 @@ function gen_date {
 	_val=""
 	case "$(uname)" in
 	'OpenBSD')
-		_val=`${DATE} -j ${_epoch} +"$_fmt"`
+		_val=`${DATE} -j -r${_epoch} +"$_fmt"`
 		;;
 	'Linux')
 		_val=`${DATE} -d @${_epoch} +"$_fmt"`

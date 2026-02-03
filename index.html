@@ -163,15 +163,49 @@
 			<div class="accordion-collapse collapse show" id="graphdata" data-bs-parent="#graphcontainer">
 				<div class="row p-0 m-2">
 					<div class="col">
-						<label for="graph-stack-group" class="form-label">Stack Select</label>
+						<label for="graph-stack-type" class="form-label">Stack Type</label>
 						<div class="input-group">
-							<div>
-							</div>
-							<div class="btn-group" id="graph-stack-group" role="group" aria-label="graph-stack-group">
-								<input type="radio" class="btn-check" id="ps1" name="graph-stack" autocomplete="off" checked>
+							<div class="btn-group" id="graph-stack-type" role="group" aria-label="graph-stack-type">
+								<input type="radio" class="btn-check" id="ps1" name="graph-type" autocomplete="off" checked>
 								<label class="btn btn-outline-primary" for="ps1">Combined</label>
-								<input type="radio" class="btn-check" id="ps2" name="graph-stack" autocomplete="off">
+								<input type="radio" class="btn-check" id="ps2" name="graph-type" autocomplete="off">
 								<label class="btn btn-outline-primary" for="ps2">Stacked</label>
+							</div>
+						</div>
+					</div>
+					<div class="col">
+						<label for="graph-stack-by" class="form-label">Stack By</label>
+						<div class="input-group">
+							<div class="btn-group" role="group">
+								<button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+									Fields
+								</button>
+								<ul class="dropdown-menu">
+									<li>
+										<div class="dropdown-item input-group-text">
+										<div class="form-check">
+										<input class="form-check-input" id="gsb-protocol" type="radio" name="graph-stack-by" value="protocol" aria-label="gsb-protocol" checked>
+										<label class="form-check-label" for="gsb-protocol">Protocol</label>
+										</div>
+										</div>
+									</li>
+									<li>
+										<div class="dropdown-item input-group-text">
+										<div class="form-check">
+										<input class="form-check-input" id="gsb-address" type="radio" name="graph-stack-by" value="address" aria-label="gsb-address">
+										<label class="form-check-label" for="gsb-address">Address</label>
+										</div>
+										</div>
+									</li>
+									<li>
+										<div class="dropdown-item input-group-text">
+										<div class="form-check">
+										<input class="form-check-input" id="gsb-port" type="radio" name="graph-stack-by" value="port" aria-label="gsb-port">
+										<label class="form-check-label" for="gsb-port">Port</label>
+										</div>
+										</div>
+									</li>
+								</ul>
 							</div>
 						</div>
 					</div>
@@ -565,9 +599,9 @@ function graph_legend_formatter(data) {
 // return false if data combined
 // return true if data stacked
 function get_stack_select() {
-	var gsl = document.getElementById('graph-stack-group');
+	var gsl = document.getElementById('graph-stack-type');
 	if (typeof gsl === 'undefined') { return(false); }
-	var rbs = gsl.querySelectorAll('input[name="graph-stack"]');
+	var rbs = gsl.querySelectorAll('input[name="graph-type"]');
 	if (rbs.lentgh != 2) { return(false); }
 	if (rbs[0].checked == true) {
 		return(false);
@@ -989,10 +1023,17 @@ document.getElementById('relativetime').addEventListener("keypress", (evt) => {
 		send_search();
 	}
 });
-// Hookup Stack Select
-document.getElementById('graph-stack-group').addEventListener("click", (evt) => {
+// Hookup Stack Type
+document.getElementById('graph-stack-type').addEventListener("click", (evt) => {
 	evt.preventDefault();
 	build_graph();
+});
+// Hookup Stack By
+document.querySelectorAll('input[name="graph-stack-by"]').forEach((f) => {
+	f.addEventListener("click", (evt) => {
+		evt.preventDefault();
+		build_graph();
+	});
 });
 
 // initialize the doc

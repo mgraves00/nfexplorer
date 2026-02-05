@@ -224,7 +224,7 @@
 		</div>
 	</div>
 <!-- flows -->
-	<div class="accordion m-2" id="flowlistcontainer">
+	<div class="accordion m-2" id="flowlistcontainer" data-sort-by="received" data-sort-dir="asc">
 		<div class="accordion-item">
 			<h2 class="accordion-header">
 			<button id="flowlistbutton" class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flowlistdata" aria-expanded="false" aria-controls="flowlistdata"> Flows </button>
@@ -272,23 +272,23 @@ const PROTO_NAMES = new Map([
 ]);
 
 const FLOW_FIELDS = new Map([
-	[ "received", 	{ "desc": "Flow Received",	'checked': true , 'fil': undefined,		'sort': sortNumber}],
-	[ "duration", 	{ "desc": "Flow Duration",	'checked': false, 'fil': undefined,		'sort': sortNumber}],
-	[ "proto", 		{ "desc": "Protocol",		'checked': true , 'fil': 'proto',		'sort': sortNumber}],
-	[ "srcAddr", 	{ "desc": "Source Address",	'checked': true , 'fil': 'src ip',		'sort': sortIP}],
-	[ "srcPort", 	{ "desc": "Source Port",	'checked': true , 'fil': 'src port',	'sort': sortNumber}],
-	[ "dstAddr", 	{ "desc": "Dest Address",	'checked': true , 'fil': 'dst ip',		'sort': sortIP}],
-	[ "dstPort", 	{ "desc": "Dest Port", 		'checked': true , 'fil': 'dst port',	'sort': sortNumber}],
-	[ "TTL", 		{ "desc": "TTL", 			'checked': false, 'fil': 'ttl',			'sort': sortNumber}],
-	[ "icmpTYpe", 	{ "desc": "ICMP Type", 		'checked': false, 'fil': 'icmp type',	'sort': sortNumber}],
-	[ "icmpCode", 	{ "desc": "ICMP Code", 		'checked': false, 'fil': 'icmp code',	'sort': sortNumber}],
-	[ "packets", 	{ "desc": "Packets", 		'checked': true , 'fil': 'packets eq',	'sort': sortNumber}],
-	[ "bytes", 		{ "desc": "Bytes", 			'checked': true , 'fil': 'bytes eq',	'sort': sortNumber}],
-	[ "pps", 		{ "desc": "PPS", 			'checked': false, 'fil': 'pps eq',		'sort': sortNumber}],
-	[ "bps", 		{ "desc": "BPS", 			'checked': false, 'fil': 'bps eq',		'sort': sortNumber}],
+	[ "received", 	{ "desc": "Flow Received",	'checked': true , 'fil': undefined,		'sort': sort_received}],
+	[ "duration", 	{ "desc": "Flow Duration",	'checked': false, 'fil': undefined,		'sort': sort_duration}],
+	[ "proto", 		{ "desc": "Protocol",		'checked': true , 'fil': 'proto',		'sort': sort_proto}],
+	[ "srcAddr", 	{ "desc": "Source Address",	'checked': true , 'fil': 'src ip',		'sort': sort_srcAddr}],
+	[ "srcPort", 	{ "desc": "Source Port",	'checked': true , 'fil': 'src port',	'sort': sort_srcPort}],
+	[ "dstAddr", 	{ "desc": "Dest Address",	'checked': true , 'fil': 'dst ip',		'sort': sort_dstAddr}],
+	[ "dstPort", 	{ "desc": "Dest Port", 		'checked': true , 'fil': 'dst port',	'sort': sort_dstPort}],
+	[ "TTL", 		{ "desc": "TTL", 			'checked': false, 'fil': 'ttl',			'sort': sort_ttl}],
+	[ "icmpTYpe", 	{ "desc": "ICMP Type", 		'checked': false, 'fil': 'icmp type',	'sort': sort_icmpTYpe}],
+	[ "icmpCode", 	{ "desc": "ICMP Code", 		'checked': false, 'fil': 'icmp code',	'sort': sort_icmpCode}],
+	[ "packets", 	{ "desc": "Packets", 		'checked': true , 'fil': 'packets eq',	'sort': sort_packets}],
+	[ "bytes", 		{ "desc": "Bytes", 			'checked': true , 'fil': 'bytes eq',	'sort': sort_bytes}],
+	[ "pps", 		{ "desc": "PPS", 			'checked': false, 'fil': 'pps eq',		'sort': sort_pps}],
+	[ "bps", 		{ "desc": "BPS", 			'checked': false, 'fil': 'bps eq',		'sort': sort_bps}],
 	[ "flags", 		{ "desc": "TCP Flags", 		'checked': false, 'fil': 'flags',		'sort': undefined}],
-	[ "tos", 		{ "desc": "TOS", 			'checked': false, 'fil': 'tos',			'sort': sortNumber}],
-	[ "routerIP", 	{ "desc": "Agent", 			'checked': false, 'fil': 'router ip',	'sort': sortIP}],
+	[ "tos", 		{ "desc": "TOS", 			'checked': false, 'fil': 'tos',			'sort': sort_tos}],
+	[ "routerIP", 	{ "desc": "Agent", 			'checked': false, 'fil': 'router ip',	'sort': sort_agent}],
 ]);
 
 class Flows {
@@ -358,6 +358,15 @@ class Flows {
 				callbackFn(f);
 		});
 	}
+	entries() {
+		var new_arr = [];
+		this._flows.forEach( (f) => {
+			if (f.get('filter') == true) {
+				new_arr.push(f);
+			}
+		});
+		return(new_arr);
+	}
 	slice(start, end) {
 		console.log(`slice: ${start} ${end}`);
 		var tmp_arr = [];
@@ -405,17 +414,132 @@ class Flows {
 		return(this._flows.length);
 	}
 };
+
+class Addr {
+	#addr;
+	isIPv4;
+	isIPv6;
+	constructor(val) {
+		this.#addr = this.#_parseIP(val);
+		if (this.#addr.length == 4) {
+			this.isIPv4 = true;
+			this.isIPv6 = false;
+		} else {
+			this.isIPv4 = false;
+			this.isIPv6 = true;
+		}
+	}
+	#_parseIP(val) {
+		var parr = [];
+		var segs = [];
+		if (typeof val == 'undefined') { return(undefined); }
+		if (val.indexOf(":") == -1) {
+			segs = val.split('.');
+			segs.forEach((s) => {
+				parr.push(parseInt(s));
+			});
+		} else {
+			var t = val.split("::");
+			var head = t[0].split(":");
+			var head_len = head.length;
+			var tail = (t.length > 1 ? t[1].split(":") : []);
+			var tail_len = tail.length;
+			var filler = 8 - head_len - tail_len;
+//			console.log(`head_len ${head_len}\ntail_len ${tail_len}\nfilller ${filler}`);
+			head.forEach((v) => {
+				var x = v.split('');
+				while (x.length > 0) {
+					var r4 = x.pop();
+					var r3 = x.pop() || "0";
+					var r2 = x.pop() || "0";
+					var r1 = x.pop() || "0";
+					parr.push(parseInt([r1,r2].join(''),16))
+					parr.push(parseInt([r3,r4].join(''),16))
+				}
+			});
+			for (var l = 0; l < filler; l++) {
+				parr.push(parseInt(0));
+				parr.push(parseInt(0));
+			}
+			tail.forEach((v) => {
+				var x = v.split('');
+				while (x.length > 0) {
+					var r4 = x.pop();
+					var r3 = x.pop() || "0";
+					var r2 = x.pop() || "0";
+					var r1 = x.pop() || "0";
+//					console.log(`${r1} ${r2} ${r3} ${r4}`);
+					parr.push(parseInt([r1,r2].join(''),16))
+					parr.push(parseInt([r3,r4].join(''),16))
+				}
+			});
+		}
+		return(parr);
+	}
+	toString() {
+		var s = [];
+		if (this.isIPv4) {
+			return(this.#addr.join("."));
+		} else {
+			var x = this.#addr;
+			while (x.length > 0) {
+				var r1 = x.shift();
+				var r2 = x.shift();
+				s.push([r1.toString(16).padStart(2,"0"),r2.toString(16).padStart(2,"0")].join(''));
+			}
+			return(s.join(":"));		
+		}
+	}
+	compare(val) {
+//		console.log(`testing val ${val}`);
+		if (typeof val == 'undefined' || val.length <= 0) { return(0) };
+		var caddr = this.#_parseIP(val);
+		if (typeof caddr == 'undefined') { return(0) };
+		if ((this.isIPv4 && (caddr.length == 4)) ||
+			(this.isIPv6 && (caddr.length == 16))) {
+			for(var i = 0; i < (this.isIPv4 ? 4 : 16); i++) {
+				if (this.#addr[i] < caddr[i]) { return(-1); }
+				if (this.#addr[i] > caddr[i]) { return(1); }
+			}
+			return(0);
+		}
+		// compare ipv4 and ipv6
+		return(( this.isIPv6 == true ? 1 : -1));
+	}
+};
 var cacheflows=undefined;
 var cacheheaders=undefined;
 var searchtime=undefined;
 var dygraph=undefined;
 var flowsperpage=50;
 
+function sort_received(a,b) { return sortNumber(a,b,"received"); }
+function sort_duration(a,b) { return sortNumber(a,b,"duration"); }
+function sort_proto(a,b) { return sortNumber(a,b,"proto"); }
+function sort_srcAddr(a,b) { return sortIP(a,b,"srcAddr"); }
+function sort_srcPort(a,b) { return sortNumber(a,b,"srcPort"); }
+function sort_dstAddr(a,b) { return sortIP(a,b,"dstAddr"); }
+function sort_dstPort(a,b) { return sortNumber(a,b,"dstPort"); }
+function sort_ttl(a,b) { return sortNumber(a,b,"ttl"); }
+function sort_icmpTYpe(a,b) { return sortNumber(a,b,"icmpTYpe"); }
+function sort_icmpCode(a,b) { return sortNumber(a,b,"icmpCode"); }
+function sort_packets(a,b) { return sortNumber(a,b,"packets"); }
+function sort_bytes(a,b) { return sortNumber(a,b,"bytes"); }
+function sort_pps(a,b) { return sortNumber(a,b,"pps"); }
+function sort_bps(a,b) { return sortNumber(a,b,"bps"); }
+function sort_tos(a,b) { return sortNumber(a,b,"tos"); }
+function sort_agent(a,b) { return sortIP(a,b,"routerIP"); }
 // sort functions
-function sortIP(a,b) {
-	return(0);
+function sortIP(a,b, field) {
+	var ipa = a.get(field);
+	var ipb = b.get(field);
+	var na = new Addr(ipa);
+	return(na.compare(ipb));
 }
-function sortNumber(a,b) {
+function sortNumber(a,b, field) {
+//	console.log(`sortNumber: ${field}`);
+	if (a.get(field) < b.get(field)) { return -1; }
+	if (a.get(field) > b.get(field)) { return 1; }
 	return(0);
 }
 
@@ -542,6 +666,28 @@ function compare_date(a,b) {
 	return(v);
 }
 /*
+ * sort the subset array by the 'by' field in the 'dir' direction
+ */
+function sort_subset(arr, by, dir) {
+//	console.log(`sort_subset: by = ${by} dir = ${dir}`);
+//	var flc = document.getElementById('flowlistcontainer')
+//	console.log(`sort_subset: by = ${flc.dataset.sortBy} dir = ${flc.dataset.sortDir}`);
+	if (FLOW_FIELDS.has(by) == false) {
+		console.log('sort on unknown field');
+		return(arr);
+	}
+	var field = FLOW_FIELDS.get(by);
+	if (field.sort == undefined) {
+		console.log('trying to sort unsortable field');
+		return(arr);
+	}
+	arr.sort(field.sort);
+	if (dir == "desc") {
+		arr.reverse();
+	}
+	return(arr);
+}
+/*
  * dygraph data expect one timestamp per record. netflow records can have
  * the same timestamp.  This function will add up the fields if the timestamps
  * match.
@@ -578,6 +724,32 @@ function graph_zoom(mints, maxts, points) {
 function graph_click(evt, ts, point) {
 	console.log("graph_click");
 	load_flows({'timestamp': ts });
+}
+function sort_flows(field) {
+//	console.log(`sort_flows: ${field}`);
+	var flc = document.getElementById('flowlistcontainer');
+	if (typeof flc === 'undefined') return;
+	if (flc.dataset.sortBy == field) {	// same field... reverse sort
+		flc.dataset.sortDir = (flc.dataset.sortDir == "desc" ? "asc" : "desc");
+	} else {
+		flc.dataset.sortBy = field;
+		flc.dataset.sortDir = "asc";
+	}
+/*
+ * XXX when caret is clicked on event returns undefined
+ *
+	var caret = document.querySelector(`a[data-field="${field}"] > i`);
+	if (flc.dataset.sortBy == field && flc.dataset.sortDir == "asc") {
+		caret.classList.remove('bi-caret-down-fill');
+		caret.classList.remove('bi-caret-up-fill');
+		caret.classList.add('bi-caret-down-fill');
+	} else {
+		caret.classList.remove('bi-caret-down-fill');
+		caret.classList.remove('bi-caret-up-fill');
+		caret.classList.add('bi-caret-up-fill');
+	}
+*/
+	load_flows({'orderby': flc.dataset.sortBy, 'orderdir': flc.dataset.sortDir});
 }
 /*
  * retrun true if graph element is visible
@@ -708,14 +880,37 @@ async function build_graph(gtype) {
 }
 async function load_headers() {
 	const flowlist = document.getElementById('flowlist');
+	const flc = document.getElementById('flowlistcontainer');
 	const thead = flowlist.getElementsByTagName('thead')[0];
 	while(thead.firstChild) { thead.removeChild(thead.firstChild); } // removed all existing rows
 	fields = get_checked_fields();
 	fields.forEach( (f) => {
+		var ff = FLOW_FIELDS.get(f);
+		var fn = document.createElement("a");
+		fn.dataset['field'] = f;
+		fn.classList.add('btn');
+		fn.classList.add('btn-primary');
+		fn.innerHTML =  ff.desc;
+/*
+		var caret = document.createElement("i");
+		caret.classList.add('bi');
+		if (flc.dataset.sortBy == f && flc.dataset.sortDir == "asc") {
+			caret.classList.add('bi-caret-down-fill');
+		} else {
+			caret.classList.add('bi-caret-up-fill');
+		}
+		fn.appendChild(caret);
+*/
+		if (ff.sort != undefined) {
+			fn.addEventListener("click", (evt) => {
+				sort_flows(evt.target.dataset.field);
+				evt.preventDefault();
+			});
+		}
 		var th = document.createElement("th");
-		th.innerHTML = FLOW_FIELDS.get(f).desc;
 		th.classList.add('col');
 		th.classList.add('fs-5');
+		th.appendChild(fn);
 		thead.appendChild(th);
 	});
 }
@@ -726,7 +921,7 @@ async function load_flowpager(currentpage) {
 	if (typeof currentpage === 'undefined') currentpage = 1;
 	const fp = document.getElementById('flowpager');
 	var lastpage = Math.floor(cacheflows.length / flowsperpage) + 1;
-	console.log(`currentpage: ${currentpage} lastpage: ${lastpage}`);
+//	console.log(`currentpage: ${currentpage} lastpage: ${lastpage}`);
 	while(fp.firstChild) { fp.removeChild(fp.firstChild); } // removed all existing buttons
 	if (currentpage > lastpage) currentpage = lastpage;
 	if (currentpage < 1) currentpage = 1;
@@ -793,15 +988,18 @@ async function load_flowpager(currentpage) {
 	
 }
 async function load_flows(opts) {
+	if (typeof cacheflows === 'undefined') return;		// no flows to display
 	var lft = Date.now();
 	if (typeof opts === 'undefined') opts = { 'page': 1,
-						'order': 'asc',
+						'orderby': 'received',
+						'orderdir': 'asc',
 						'field_name': undefined,
 						'field_val': undefined,
 						'timestamp': undefined
 					};
 	if (typeof opts['page'] === 'undefined') opts['page'] = 1;
-	if (typeof opts['order'] === 'undefined') opts['order'] = 'asc';
+	if (typeof opts['orderby'] === 'undefined') opts['orderby'] = 'received';
+	if (typeof opts['orderdir'] === 'undefined') opts['orderdir'] = 'asc';
 	var lastpage = Math.floor(cacheflows.length / flowsperpage) + 1;	// get last page
 	if (typeof opts['timestamp'] !== 'undefined') {
 		let i = cacheflows.find_ts(opts['timestamp']);
@@ -819,12 +1017,10 @@ async function load_flows(opts) {
 	const tbody = flowlist.getElementsByTagName('tbody')[0];
 	while(tbody.firstChild) { tbody.removeChild(tbody.firstChild); }	// removed all existing rows
 	load_flowpager(opts['page']);						// reload the pager controls
-/*
-	if (typeof order !== 'undefined' && FLOWS_SORT[order] !== 'undefined') {
-		cacheflows = cacheflows.sort(FLOWS_SORT[order]);
-	}
-*/
-	var subset = cacheflows.slice(start, offset);
+	var subset = cacheflows.entries();
+	sort_subset(subset,opts['orderby'],opts['orderdir']);
+//	var subset = cacheflows.slice(start, offset);
+	subset = subset.slice(start, offset);
 //	console.log(`cacheflows.length: ${cacheflows.length} subset.length: ${subset.length}`);
 	subset.forEach( (flo) => {
 		var tr = document.createElement("tr");

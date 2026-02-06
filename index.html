@@ -268,6 +268,22 @@ class Flows {
 		}
 		this.length = this._flows.length;
 	}
+	toCSV() {
+		var to_ret=[];
+		to_ret.push(this._headers.join(','));
+		this.forEach((f) => {
+			var a=[];
+			this._headers.forEach((h) => {
+				if (h == 'received') {
+					a.push(f.get(h).valueOf());
+				} else {
+					a.push(f.get(h));
+				}
+			});
+			to_ret.push(a.join(','));
+		});
+		return(to_ret.join('\n'));
+	}
 	filter(cb_fn, ...args) {
 		this._flows.forEach((f) => {
 			if (cb_fn(f, ...args) == false) {
@@ -527,7 +543,18 @@ function get_checked_fields() {
 	return(ret);
 }
 async function action_download_flows() {
-	console.log("action_download_flows clicked");
+	var data = cacheflows.toCSV();
+	var blob = new Blob([data], { type: 'text/csv' });
+	var url = URL.createObjectURL(blob);
+	var a = document.createElement('a');
+	a.href = url;
+	a.download = "nfexplorer.csv";
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
+	URL.revokeObjectURL(url);
+	blob=undefined;
+	data=undefined;
 }
 async function action_copy_link() {
 	console.log("action_copy_link clicked");

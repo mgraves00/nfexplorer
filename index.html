@@ -694,9 +694,6 @@ function compare_date(a,b) {
  * sort the subset array by the 'by' field in the 'dir' direction
  */
 function sort_subset(arr, by, dir) {
-//	console.log(`sort_subset: by = ${by} dir = ${dir}`);
-//	var flc = document.getElementById('flowlistcontainer')
-//	console.log(`sort_subset: by = ${flc.dataset.sortBy} dir = ${flc.dataset.sortDir}`);
 	if (FLOW_FIELDS.has(by) == false) {
 		console.log('sort on unknown field');
 		return(arr);
@@ -728,7 +725,6 @@ function gen_graph_data() {
 	if (stacktype != 'stacked')
 		fields.push('All');
 	cacheflows.forEach((f) => {
-//			console.log(`gen_graph_data: ${f.get(stackby)}`);
 		var idx = 1;
 		var t = [];
 		var name = "";
@@ -774,15 +770,12 @@ function gen_graph_data() {
 	return({'labels': fields, 'values': data})
 }
 function graph_zoom(mints, maxts, points) {
-	console.log("graph_zoom");
 	load_flows({'timestamp': mints });
 }
 function graph_click(evt, ts, point) {
-	console.log("graph_click");
 	load_flows({'timestamp': ts });
 }
 function sort_flows(field) {
-//	console.log(`sort_flows: ${field}`);
 	var flc = document.getElementById('flowlistcontainer');
 	if (typeof flc === 'undefined') return;
 	if (flc.dataset.sortBy == field) {	// same field... reverse sort
@@ -854,7 +847,6 @@ function get_stack_by() {
 	if (typeof gsl === 'undefined') { return(false); }
 	var rbs = gsl.querySelectorAll('input[name="graph-by"]');
 	for (var b = 0; b < rbs.length; b++) {
-//		console.log(`get_stack_by: ${rbs[b].name} ${rbs[b].checked} ${rbs[b].value}`);
 		if (rbs[b].checked == true)
 			return(rbs[b].value);
 	}
@@ -1003,6 +995,7 @@ async function load_headers() {
 		fn.dataset['field'] = f;
 		fn.classList.add('btn');
 		fn.classList.add('btn-primary');
+		fn.classList.add('w-100');
 		fn.innerHTML =  ff.desc;
 /*
 		var caret = document.createElement("i");

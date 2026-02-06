@@ -873,8 +873,8 @@ async function build_graph(gtype) {
 	var dyconfig = {};
 	if (typeof dygraph === 'undefined') {
 		dyconfig = {
-// when specified caused problem when zooming in... but just the first time.
-//			dateWindow: [data[0][0], data[data.length-1][0]], // set the date window to the all flows
+//BUG: when specified. zoom doesnt work first time
+//			dateWindow: [data.values[0][0], data.values[data.values.length-1][0]], // set the date window to the all flows
 			connectSeparatedPoints: true,
 			labels: data.labels,
 			legend: 'always',
@@ -954,7 +954,8 @@ async function build_graph(gtype) {
 			labels: data.labels,
 			stackedGraph: (stype == 'stacked' ? true : false),
 			file: data.values,
-			dateWindow: [data.values[0][0], data.values[data.values.length-1][0]], // reset the date window
+//BUG: when specified. zoom doesnt work first time
+//			dateWindow: [data.values[0][0], data.values[data.values.length-1][0]], // reset the date window
 		};
 		dygraph.updateOptions(dyconfig);
 	}

@@ -153,21 +153,27 @@
 	<div class="accordion m-2" id="flowlistcontainer" data-sort-by="received" data-sort-dir="asc">
 		<div class="accordion-item">
 			<h2 class="accordion-header">
-			<button id="flowlistbutton" class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flowlistdata" aria-expanded="false" aria-controls="flowlistdata"> Flows </button>
+				<button id="flowlistbutton" class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flowlistdata" aria-expanded="false" aria-controls="flowlistdata"> Flows </button>
 			</h2>
 			<div class="accordion-collapse table-responsive collapse" id="flowlistdata" data-bs-parent="#flowlistcontainer">
 				<nav class="navbar">
-				<div class="w-100 mx-1">
-				<div id="flowpager" class="btn-group w-25" role="group" aria-label="flow navigation buttons">
-					<button type="button" class="btn btn-outline-secondary disabled"><i class="bi bi-chevron-bar-left"></i></button>
-					<button type="button" class="btn btn-outline-secondary disabled"><i class="bi bi-chevron-left"></i></button>
-					<input type="text" class="form-control" id="currentpage" value="0" disabled></button>
-					<button type="button" class="btn btn-outline-secondary disabled"><i class="bi bi-chevron-right"></i></button>
-					<button type="button" class="btn btn-outline-secondary disabled"><i class="bi bi-chevron-bar-right"></i></button>
-				</div>
-				<!--- dropdown to allow CSV download of flows -->
-				<button type="button" class="btn btn-outline-secondary float-end disabled"><i class="bi bi-three-dots"></i></button>
-				<div>
+					<div class="w-100 mx-1">
+						<div id="flowpager" class="btn-group w-25" role="group" aria-label="flow navigation buttons">
+							<button type="button" class="btn btn-outline-secondary disabled"><i class="bi bi-chevron-bar-left"></i></button>
+							<button type="button" class="btn btn-outline-secondary disabled"><i class="bi bi-chevron-left"></i></button>
+							<input type="text" class="form-control" id="currentpage" value="0" disabled></button>
+							<button type="button" class="btn btn-outline-secondary disabled"><i class="bi bi-chevron-right"></i></button>
+							<button type="button" class="btn btn-outline-secondary disabled"><i class="bi bi-chevron-bar-right"></i></button>
+						</div>
+						<!--- dropdown to allow CSV download of flows -->
+						<div class="btn-group float-end" role="group" aria-label="flow action buttons">
+							<button id="flow-dropdown" type="button" class="btn btn-outline-secondary dropdown-toggle disabled" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-three-dots"></i></button>
+							<ul id="flow-dropdown-list" class="dropdown-menu dropdown-menu-end">
+								<li><a class="dropdown-item" href="#"><i class="bi bi-cloud-arrow-down"></i>&nbsp;Download</a></li>
+								<li><a class="dropdown-item" href="#"><i class="bi bi-link"></i>&nbsp;Query</a></li>
+							</ul>
+						</div>
+					</div>
 				</nav>
 				<table class="table font-monospace table-hover" id="flowlist">
 					<thead class="mb-5"></thead>
@@ -520,6 +526,13 @@ function get_checked_fields() {
 	};
 	return(ret);
 }
+async function action_download_flows() {
+	console.log("action_download_flows clicked");
+}
+async function action_copy_link() {
+	console.log("action_copy_link clicked");
+}
+
 async function cache_filter_cb(fld,val) {
 	const fs = document.getElementById('filterstats');
 	if (fs.innerHTML.includes("cached") == false) { fs.innerHTML = fs.innerHTML+" (cached)"; }
@@ -818,6 +831,7 @@ async function build_graph(gtype) {
 			zoomCallback: graph_zoom,
 			highlightCircleSize: 3,
 			labelsKMG2: true,
+			fillGraph: true,
 /*
 			highlightSeriesOpts: {
 				strokeWidth: 3,
@@ -1068,6 +1082,7 @@ async function load_flows(opts) {
 		});
 		tbody.appendChild(tr);
 	});
+	document.getElementById('flow-dropdown').classList.remove('disabled'); // enable the flow-dropdown
 	subset=[];
 	set_flowlistbutton(cacheflows.length);
 	lft = Date.now() - lft;	
@@ -1314,6 +1329,17 @@ window.addEventListener("load", () => {
 	hookup_fields_selector();
 	hookup_stack_by_selector();
 	load_headers();
+	// Hookup flow-dropdown-list
+	var fdl = document.getElementById('flow-dropdown-list').querySelectorAll('a');
+	fdl[0].addEventListener('click', (evt) => {
+		evt.preventDefault();
+		action_download_flows();
+	});
+	fdl[1].addEventListener('click', (evt) => {
+		evt.preventDefault();
+		action_copy_link();
+	});
+	
 });
 
 </script>

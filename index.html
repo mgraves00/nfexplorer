@@ -470,8 +470,8 @@ function sortIP(a,b, field) {
 }
 function sortNumber(a,b, field) {
 //	console.log(`sortNumber: ${field}`);
-	if (a.get(field) < b.get(field)) { return -1; }
-	if (a.get(field) > b.get(field)) { return 1; }
+	if (parseInt(a.get(field)) < parseInt(b.get(field))) { return -1; }
+	if (parseInt(a.get(field)) > parseInt(b.get(field))) { return 1; }
 	return(0);
 }
 

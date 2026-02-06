@@ -170,7 +170,7 @@
 							<button id="flow-dropdown" type="button" class="btn btn-outline-secondary dropdown-toggle disabled" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-three-dots"></i></button>
 							<ul id="flow-dropdown-list" class="dropdown-menu dropdown-menu-end">
 								<li><a class="dropdown-item" href="#"><i class="bi bi-cloud-arrow-down"></i>&nbsp;Download</a></li>
-								<li><a class="dropdown-item" href="#"><i class="bi bi-link"></i>&nbsp;Query</a></li>
+								<li><a class="dropdown-item" href="#"><i class="bi bi-link"></i>&nbsp;Query Link</a></li>
 							</ul>
 						</div>
 					</div>
@@ -572,8 +572,55 @@ async function action_download_flows() {
 }
 async function action_copy_link() {
 	console.log("action_copy_link clicked");
-}
+	var link=[];
+	var opt = document.getElementById('timetype').value
+	link.push(`timetype=${opt}`);
+	if ( opt == "relative" ) {
+		var ts = document.getElementById('relativetime').value;
+		link.push(`range=${ts}`);
+	} else {
+		var st = Math.floor(Date.parse(
+			document.getElementById('startdate').value+" "+
+			document.getElementById('starttime').value
+		).valueOf() / 1000);
+		var et = Math.floor(Date.parse(
+			document.getElementById('enddate').value+" "+
+			document.getElementById('endtime').value
+		).valueOf() / 1000);
+		link.push(`starttime=${st}`);
+		link.push(`endtime=${et}`);
+	}
+	var filter=document.getElementById('filter').value;
+	link.push(`filter=${filter}`);
+	var link_str = window.location.origin+window.location.pathname+'?'+encodeURI(link.join('&'));
 
+	navigator.clipboard.writeText(link_str)
+		.then(() => {
+			console.log(link_str);
+			send_user_message('Link Copied...', 'alert-success', 1500);
+		})
+		.catch(err => {
+			console.error('failed to copy link text', err);
+		});
+}
+async function send_user_message(msg, type, to_ms) {
+	var mb = document.createElement('div');
+	mb.setAttribute('id', 'action-copied-message');
+	mb.setAttribute('role', 'alert');
+	mb.classList.add('z-3');
+	mb.classList.add('position-absolute');
+	mb.classList.add('top-0');
+	mb.classList.add('end-0');
+	mb.classList.add('alert');
+	mb.classList.add(type);
+	mb.innerHTML=msg;
+	document.body.appendChild(mb);
+	setTimeout(() => {
+		var mb = document.getElementById('action-copied-message');
+		if (typeof mb === 'undefined') return;
+		document.body.removeChild(mb);
+	}, to_ms);
+}
 async function cache_filter_cb(fld,val) {
 	const fs = document.getElementById('filterstats');
 	if (fs.innerHTML.includes("cached") == false) { fs.innerHTML = fs.innerHTML+" (cached)"; }
@@ -1294,6 +1341,68 @@ async function send_search() {
 async function update_graph_top_n() {
 	build_graph();
 }
+async function process_search_query() {
+	if (window.location.search == "") { return; }
+	var search = decodeURI(window.location.search).split('?')[1];
+	var opts = search.split('&');
+	var valid_val = true;
+	opts.forEach(o => {
+		var kv = o.split('=',2);
+		switch (kv[0]) {
+			case 'timetype':
+				var el = document.getElementById(kv[0]);
+				if (typeof el === 'undefined') { return; }
+				el.value = (kv[1] == 'relative') ? "relative" : "range";
+				break;
+			case 'relative':
+				var el = document.getElementById('relativetime');
+				if (typeof el === 'undefined') { return; }
+				el.value = kv[1] || 5;
+				break;
+			case 'starttime':
+				var nd = new Date(0);
+				nd.setTime(kv[1]+"000");
+				el = document.getElementById('startdate');
+				if (typeof el === 'undefined') { return; }
+				el.value = [nd.getFullYear(),
+							Number(nd.getMonth()+1).toString().padStart(2,"0"),
+							Number(nd.getDate()).toString().padStart(2,"0")
+						].join('-');
+				el = document.getElementById('starttime');
+				if (typeof el === 'undefined') { return; }
+				el.value = [Number(nd.getHours()).toString().padStart(2,"0"),
+							Number(nd.getMinutes()).toString().padStart(2,"0"),
+							Number(nd.getSeconds()).toString().padStart(2,"0")
+						].join(':');
+				break;
+			case 'endtime':
+				var nd = new Date(0);
+				nd.setTime(kv[1]+"000");
+				var el = document.getElementById('enddate');
+				if (typeof el === 'undefined') { return; }
+				el.value = [nd.getFullYear(),
+							Number(nd.getMonth()+1).toString().padStart(2,"0"),
+							Number(nd.getDate()).toString().padStart(2,"0")
+						].join('-');
+				el = document.getElementById('endtime');
+				if (typeof el === 'undefined') { return; }
+				el.value = [Number(nd.getHours()).toString().padStart(2,"0"),
+							Number(nd.getMinutes()).toString().padStart(2,"0"),
+							Number(nd.getSeconds()).toString().padStart(2,"0")
+						].join(':');
+				break;
+			case 'filter':
+				var el = document.getElementById(kv[0]);
+				if (typeof el === 'undefined') { return; }
+				el.value = kv[1] || "";
+				break;
+			default:
+				valid_vals = false;
+		}
+	});
+	if (valid_vals)
+		send_search();
+}
 // Hookup clear button
 document.getElementById("clearsearch").addEventListener("click", btnElem => {
 //	console.log('clear pressed');
@@ -1366,7 +1475,7 @@ document.getElementById('graph-top-n').addEventListener('keypress', (evt) => {
 
 // initialize the doc
 window.addEventListener("load", () => {
-	set_time_type();
+	process_search_query();
 	hookup_fields_selector();
 	hookup_stack_by_selector();
 	load_headers();
@@ -1380,7 +1489,7 @@ window.addEventListener("load", () => {
 		evt.preventDefault();
 		action_copy_link();
 	});
-	
+	set_time_type();
 });
 
 </script>

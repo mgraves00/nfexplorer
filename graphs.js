@@ -80,7 +80,7 @@ function gen_graph_data() {
 			if (typeof x[i] === 'undefined')
 				x[i] = 0;
 	});
-	console.log(`gen_graph_data: fields: ${fields} value: ${data.length}`);
+//	console.log(`gen_graph_data: fields: ${fields} value: ${data.length}`);
 	return({'labels': fields, 'values': data})
 }
 function graph_zoom(mints, maxts, points) {

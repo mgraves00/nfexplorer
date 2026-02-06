@@ -155,12 +155,12 @@
 	<div class="accordion m-2" id="graphcontainer">
 		<div class="accordion-item">
 			<h2 class="accordion-header">
-			<button id="graphbutton" class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#graphdata" aria-expanded="true" aria-controls="graphdata">
+			<button id="graphbutton" class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#graphdata" aria-expanded="false" aria-controls="graphdata">
 				Graph&nbsp;&nbsp;&nbsp;
 				<div class="fs-7 fw-lighter opacity-50">(zoom: click+drag; pan: shift+click+drag; restore: double-click)</div>
 			</button>
 			</h2>
-			<div class="accordion-collapse collapse show" id="graphdata" data-bs-parent="#graphcontainer">
+			<div class="accordion-collapse collapse" id="graphdata" data-bs-parent="#graphcontainer">
 				<div class="row p-0 m-2">
 					<div class="col">
 						<label for="graph-stack-type" class="form-label">Stack Type</label>
@@ -1364,6 +1364,10 @@ document.querySelectorAll('input[name="graph-by"]').forEach((f) => {
 	});
 });
 */
+// Hookup graph show signal
+document.getElementById('graphcontainer').addEventListener('shown.bs.collapse', (evt) => {
+	build_graph();
+});
 
 // initialize the doc
 window.addEventListener("load", () => {

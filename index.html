@@ -140,6 +140,10 @@
 				<div class="col">Protocol to filter by.  Can specifiy wellknown name or number. </div>
 			</div>
 			<div class="row">
+				<div class="col">[src|dst] net &lt;address[/bitmask]|address netmask&gt;; </div>
+				<div class="col">Network net|bit mask to search for. 'src' or 'dst' can be used to filter down to source or destination.</div>
+			</div>
+			<div class="row">
 				<div class="col">[src|dst] ip &lt;address&gt; </div>
 				<div class="col">Address to search for. 'src' or 'dst' can be used to filter down to source or destination.</div>
 			</div>
@@ -154,6 +158,10 @@
 			<div class="row">
 				<div class="col">router ip &lt;address&gt; </div>
 				<div class="col">Address of flow agent. </div>
+			</div>
+			<div class="row">
+				<div class="col">icmp [type|code] &lt;number&gt; </div>
+				<div class="col">ICMP type or code number. </div>
 			</div>
 			<div class="row">
 				<div class="col">tos &lt;number&gt; </div>

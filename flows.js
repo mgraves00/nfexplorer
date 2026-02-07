@@ -7,7 +7,7 @@ class Flows {
 	#_shadowflows;		// shadow of _flows array
 	#_headers;			// headers array
 	length;				// filtered _flows length
-	sort_map = {
+	static sort_map = {
 		'received': this.#_sortDate,
 		'duration': this.#_sortFloat,
 		'proto': this.#_sortNumber,
@@ -25,42 +25,42 @@ class Flows {
 		'tos': this.#_sortNumber,
 		'routerIP': this.#_sortIP,
 	};
-	#_sortDate(a,b, field) {
-//		var ia = BigInt(a.get(field).valueOf());
-//		var ib = BigInt(b.get(field).valueOf());
-		var ia = a.get(field).getTime();
-		var ib = b.get(field).getTime();
+	static #_sortDate(a,b, field) {
+//		let ia = BigInt(a.get(field).valueOf());
+//		let ib = BigInt(b.get(field).valueOf());
+		let ia = a.get(field).getTime();
+		let ib = b.get(field).getTime();
 		if (ia < ib) { return -1; }
 		if (ia > ib) { return 1; }
 		return(0);
 	}
-	#_sortFloat(a,b,field) {
-		var ia = parseFloat(a.get(field));
-		var ib = parseFloat(b.get(field));
+	static #_sortFloat(a,b,field) {
+		let ia = parseFloat(a.get(field));
+		let ib = parseFloat(b.get(field));
 		if (ia < ib) { return -1; }
 		if (ia > ib) { return 1; }
 		return(0);
 	}
-	#_sortNumber(a,b, field) {
+	static #_sortNumber(a,b, field) {
 		if (parseInt(a.get(field)) < parseInt(b.get(field))) { return -1; }
 		if (parseInt(a.get(field)) > parseInt(b.get(field))) { return 1; }
 		return(0);
 	}
 	/* requires Addr Class */
-	#_sortIP(a,b, field) {
-		var ipa = a.get(field);
-		var ipb = b.get(field);
-		var na = new Addr(ipa);
+	static #_sortIP(a,b, field) {
+		let ipa = a.get(field);
+		let ipb = b.get(field);
+		let na = new Addr(ipa);
 		return(na.compare(ipb));
 	}
-	#epoch_to_date(e) {
+	static #epoch_to_date(e) {
 		let a = e.split(".");
-		var d = new Date(0);
+		let d = new Date(0);
 		d.setUTCSeconds(a[0]);
 		if (a.length == 2) d.setUTCMilliseconds(a[1]);
 		return(d)
 	}
-	#comp_dates(a,b) {
+	static #comp_dates(a,b) {
 		let aa = a.get('received');
 		let bb = b.get('received');
 		if (aa.getTime() < bb.getTime()) { return -1; }

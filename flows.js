@@ -4,8 +4,55 @@
 
 class Flows {
 	#_flows;			// flows array of Maps
+	#_shadowflows;		// shadow of _flows array
 	#_headers;			// headers array
 	length;				// filtered _flows length
+	sort_map = {
+		'received': this.#_sortDate,
+		'duration': this.#_sortFloat,
+		'proto': this.#_sortNumber,
+		'srcAddr': this.#_sortIP,
+		'srcPort': this.#_sortNumber,
+		'dstAddr': this.#_sortIP,
+		'dstPort': this.#_sortNumber,
+		'ttl': this.#_sortNumber,
+		'icmpTYpe': this.#_sortNumber,
+		'icmpCode': this.#_sortNumber,
+		'packets': this.#_sortNumber,
+		'bytes': this.#_sortNumber,
+		'pps': this.#_sortNumber,
+		'bps': this.#_sortNumber,
+		'tos': this.#_sortNumber,
+		'routerIP': this.#_sortIP,
+	};
+	#_sortDate(a,b, field) {
+//		var ia = BigInt(a.get(field).valueOf());
+//		var ib = BigInt(b.get(field).valueOf());
+		var ia = a.get(field).getTime();
+		var ib = b.get(field).getTime();
+		if (ia < ib) { return -1; }
+		if (ia > ib) { return 1; }
+		return(0);
+	}
+	#_sortFloat(a,b,field) {
+		var ia = parseFloat(a.get(field));
+		var ib = parseFloat(b.get(field));
+		if (ia < ib) { return -1; }
+		if (ia > ib) { return 1; }
+		return(0);
+	}
+	#_sortNumber(a,b, field) {
+		if (parseInt(a.get(field)) < parseInt(b.get(field))) { return -1; }
+		if (parseInt(a.get(field)) > parseInt(b.get(field))) { return 1; }
+		return(0);
+	}
+	/* requires Addr Class */
+	#_sortIP(a,b, field) {
+		var ipa = a.get(field);
+		var ipb = b.get(field);
+		var na = new Addr(ipa);
+		return(na.compare(ipb));
+	}
 	#epoch_to_date(e) {
 		let a = e.split(".");
 		var d = new Date(0);
@@ -16,11 +63,9 @@ class Flows {
 	#comp_dates(a,b) {
 		let aa = a.get('received');
 		let bb = b.get('received');
-		if (aa.getTime() < bb.getTime())
-			return -1;
-		if (aa.getTime() > bb.getTime())
-			return 1;
-		return 0;
+		if (aa.getTime() < bb.getTime()) { return -1; }
+		if (aa.getTime() > bb.getTime()) { return 1; }
+		return(0);
 	}
 	constructor(unparsed_flows) {
 		this._flows = Array();
@@ -140,7 +185,7 @@ class Flows {
 	_length() {
 		return(this._flows.length);
 	}
-};
+}; // endof class FLows
 
 async function cache_filter_cb(fld,val) {
 	const fs = document.getElementById('filterstats');
@@ -291,11 +336,10 @@ async function load_flowpager(currentpage) {
 	sb.classList.add('btn');
 	sb.classList.add('btn-outline-secondary');
 	sb.innerHTML='<i class="bi bi-chevron-bar-left"></i>';
-	sb.addEventListener("click", (evt) => { change_page(1); });
 	if (currentpage <= 1) {
 		sb.classList.add('disabled');
 	} else {
-		sb.addEventListener("click", (evt) => { change_page(currentpage-1); });
+		sb.addEventListener("click", (evt) => { change_page(1); });
 	}
 	fp.appendChild(sb)
 	// prev button
@@ -310,7 +354,7 @@ async function load_flowpager(currentpage) {
 	}
 	fp.appendChild(pb)
 
-	// current button
+	// current index
 	var cb = document.createElement("input");
 	cb.classList.add('form-control');
 	cb.setAttribute("type", "text");

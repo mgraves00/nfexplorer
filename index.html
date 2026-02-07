@@ -81,6 +81,9 @@
 		<div class="col-12">
 			<label for="filter" class="form-label">Filter</label>
 			<div class="input-group">
+			<button type="button" class="btn btn-outline-secondary" data-bs-toggle="offcanvas" data-bs-target="#filterinfo" aria-controls="filter info help">
+				<i class="bi bi-info-circle"></i>
+			</button>
 			<input class="form-control" id="filter" aria-describedby="filterhelp" placeholder="*">
 			<button type="button" id="clearsearch" class="btn btn-outline-secondary">
 				<i class="bi bi-x"></i>
@@ -97,6 +100,86 @@
 		</div>
 		</div>
 	</form>
+	</div>
+	<div class="offcanvas offcanvas-end" style="width: 50%;" tabindex="-1" id="filterinfo" aria-labelledby="filterinfohelp">
+		<div class="offcanvas-header">
+			<h5 class="offcanvas-title" id="filterinfohelp">Filter Help</h5>
+			<button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+		</div>
+		<div class="offcavas-body" style="overflow: scroll;">
+			<div class="m-2">
+				<p>Flow records can be filtered using an expression made up of one or more expressions.
+<pre>
+   expression and expression
+   expression or expression
+   not expression and (expression)
+</pre>
+</p>
+				<p> All expressions where a number is used, the number may be given in decimal, hex (by prefixing with 0x).  A multiplication factor may be used pre adding the suffix (K, M, G, T).
+				</p>
+				<p>When comparisons are required, one of the following can be used. If comp is omitted then 'equal' is assumed.
+<pre>
+	equal: EQ, = ==
+	less than: LT, &lt;
+	less than or equal: LE, &lt;=
+	greater than: GT, &gt;
+	greater than or equal: GE, &gt;=
+</pre>
+				</p>
+			</div>
+			<div class="row fs-4">
+				<div class="col"> Syntax </div>
+				<div class="col"> Description </div>
+			</div>
+			<div class="row">
+				<div class="col">inet|ipv4|inet6|ipv6 </div>
+				<div class="col">Select IPv4 or IPv6 packet types.</div>
+			</div>
+			<div class="row">
+				<div class="col">proto &lt;name|number&gt; </div>
+				<div class="col">Protocol to filter by.  Can specifiy wellknown name or number. </div>
+			</div>
+			<div class="row">
+				<div class="col">[src|dst] ip &lt;address&gt; </div>
+				<div class="col">Address to search for. 'src' or 'dst' can be used to filter down to source or destination.</div>
+			</div>
+			<div class="row">
+				<div class="col">[src|dst] port &lt;number&gt; </div>
+				<div class="col">Port to search for. 'src' or 'dst' can be used to filter down to source or destination.</div>
+			</div>
+			<div class="row">
+				<div class="col">ttl &lt;comp&gt; &lt;number&gt; </div>
+				<div class="col">Filter by TTL.</div>
+			</div>
+			<div class="row">
+				<div class="col">router ip &lt;address&gt; </div>
+				<div class="col">Address of flow agent. </div>
+			</div>
+			<div class="row">
+				<div class="col">tos &lt;number&gt; </div>
+				<div class="col">Type Of Service field. </div>
+			</div>
+			<div class="row">
+				<div class="col">[in|out] bytes &lt;comp&gt; &lt;number&gt; </div>
+				<div class="col">Bytes in or out of flow. </div>
+			</div>
+			<div class="row">
+				<div class="col">[in|out] packets &lt;comp&gt; &lt;number&gt; </div>
+				<div class="col">Packets in or out of flow. </div>
+			</div>
+			<div class="row">
+				<div class="col">[in|out] bps &lt;comp&gt; &lt;number&gt; </div>
+				<div class="col">Bits per second in or out of flow. </div>
+			</div>
+			<div class="row">
+				<div class="col">[in|out] bpp &lt;comp&gt; &lt;number&gt; </div>
+				<div class="col">Bytes per second in or out of flow. </div>
+			</div>
+			<div class="row">
+				<div class="col">[in|out] pps &lt;comp&gt; &lt;number&gt; </div>
+				<div class="col">Packets per second in or out of flow. </div>
+			</div>
+		</div>
 	</div>
 	<hr>
 <!-- graph -->

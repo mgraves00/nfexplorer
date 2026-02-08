@@ -5,6 +5,7 @@ nfquery.cgi
 nfquery.env
 .env
 *.tgz
+*.tar.gz
 logs/**
 data/**
 config/**

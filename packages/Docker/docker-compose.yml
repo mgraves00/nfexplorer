@@ -2,7 +2,7 @@
 ---
 services:
   nfexplorer:
-    image: nfexplorer:0.1
+    image: nfexplorer:0.6.1
     ports:
       - "2931:8080/tcp"
       - "12345:9995/udp"

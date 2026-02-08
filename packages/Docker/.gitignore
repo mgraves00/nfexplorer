@@ -4,7 +4,7 @@ index.html
 nfquery.cgi
 nfquery.env
 .env
-dygraphs-*.tgz
+*.tgz
 logs/**
 data/**
 config/**

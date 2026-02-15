@@ -1,5 +1,11 @@
 #!/bin/ksh
 
+
+# overridable args
+LOGFILE=""
+OUTPUT_FMT="csv:%trr,%td,%ra,%pr,%sa,%sp,%da,%dp,%it,%ic,%pkt,%byt,%pps,%bps,%flg,%tos"
+
+# keep track of CGI state
 #_CGI_header=
 _CGI_sent_header=0
 _prepare_qs=0
@@ -235,7 +241,7 @@ if [ ! -z "${ENV}" -a -f "${ENV}" ]; then
 	. ${ENV}
 fi
 if [ -z "${FLOW_DIR}" -o ! -d "${FLOW_DIR}" ]; then
-	echo "error: FLOW_DIR not found"
+	echo "error: FLOW_DIR '${FLOW_DIR}' not found"
 	exit 1
 fi
 prepare_query_string "$*"
@@ -258,8 +264,6 @@ starttime=`gen_date ${starttime} "%Y/%m/%d.%H:%M:%S"`
 endtime=`gen_date ${endtime} "%Y/%m/%d.%H:%M:%S"`
 TIMERANGE="-t ${starttime}-${endtime}"
 
-OUTPUT_FMT="csv:%trr,%td,%ra,%pr,%sa,%sp,%da,%dp,%it,%ic,%pkt,%byt,%pps,%bps,%flg,%tos"
-
 add_header "Content-type" "application/text"
 print_header
 
@@ -269,6 +273,8 @@ if [ $? -ne 0 ]; then
 	filter=`build_filter`
 fi
 
-#echo "${NFDUMP} $flow_args ${TIMERANGE} -o \"${OUTPUT_FMT}\" \"$filter\"" >> /tmp/query.log
+if [ ! -z "${LOGFILE}" ]; then
+	echo "${NFDUMP} $flow_args ${TIMERANGE} -o \"${OUTPUT_FMT}\" \"$filter\"" >>${LOGFILE}
+fi
 ${NFDUMP} $flow_args ${TIMERANGE} -o "${OUTPUT_FMT}" "$filter"
 

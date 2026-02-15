@@ -9,6 +9,9 @@ NFDUMP=`which nfdump`
 SED=`which sed`
 XARGS=`which xargs`
 DATE=`which date`
+TR=`which tr`
+PRINTF=`which printf`
+UNAME=`which uname`
 
 function find_env {
 	LIST="/app/config/nfquery.env /etc/nfquery.env .nfquery.env"
@@ -28,7 +31,7 @@ function urldecode {
 		echo ""
 		return 1
 	fi
-	echo -n ${_e} | ${SED} -e 's@+@ @g; s@%@\\x@g;' | ${XARGS} -0 printf "%b"
+	echo -n ${_e} | ${SED} -e 's@+@ @g; s@%@\\x@g;' | ${XARGS} -0 ${PRINTF} "%b"
 	return 0
 }
 
@@ -42,9 +45,9 @@ function print_header {
 		return 1
 	fi
 	for _i in "${_CGI_header[@]}"; do
-		printf "${_i}\r\n"
+		${PRINTF} "${_i}\r\n"
 	done
-	printf "\r\n"
+	${PRINTF} "\r\n"
 	_CGI_send_header=1
 	return 0
 }
@@ -99,7 +102,7 @@ function prepare_query_string {
 
 	esac
 	# sometimes the query string can be sent with spaced... if so, convert to +.
-	_saved_QUERY_STRING=`echo $_saved_QUERY_STRING | tr ' ' '+'`
+	_saved_QUERY_STRING=`echo $_saved_QUERY_STRING | ${TR} ' ' '+'`
 	_prepare_qs=1
 	return 0
 }
@@ -200,7 +203,7 @@ function gen_date {
 	local _epoch=$1; shift
 	local _fmt=$*
 	_val=""
-	case "$(uname)" in
+	case "$(${UNAME})" in
 	'OpenBSD')
 		_val=`${DATE} -j -r${_epoch} +"$_fmt"`
 		;;

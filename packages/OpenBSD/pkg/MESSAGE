@@ -1,0 +1,2 @@
+Set FLOW_DIR in ${VARBASE}/www/etc/nfquery.env to the directory the flows are
+captured.  NOTE: this location is referenced after the chroot.

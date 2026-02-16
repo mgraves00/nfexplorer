@@ -1,0 +1,26 @@
+#!/bin/ksh
+
+daemon="/usr/local/bin/nfcapd"
+daemon_user=_nfcapd
+daemon_group=_nfcapd
+daemon_bufsize=200000
+daemon_interval=300
+daemon_flowdir="/var/db/flow-data"
+daemon_listen="9995"
+
+. /etc/rc.d/rc.subr
+
+# setup daemon flags to include all other options
+daemon_flags="-D -z=${daemon_compress} -S1 -p ${daemon_listen} -u ${daemon_user} -g ${daemon_group} -B ${daemon_bufsize} -t ${daemon_interval} -M ${daemon_flowdir}"
+# daemon drops privs, so start a root
+daemon_user=root
+pexp="${daemon} ${daemon_flags:+ ${daemon_flags}}"
+
+rc_reload=NO
+rc_stop_signal=KILL
+
+rc_pre() {
+	[[ -d ${daemon_flowdir} ]] || install -d -o ${daemon_user} -g ${daemon_group} -m 0775 ${daemon_flowdir}
+}
+
+rc_cmd $1

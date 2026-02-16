@@ -1,0 +1,85 @@
+nfexplorer requires several programs in order to run.
+
++-------------------------------------------------------------------------------
+| Running ${PKGSTEM} on OpenBSD
++-------------------------------------------------------------------------------
+
+Install nfquery.env in /var/www/etc
+===================================
+
+Copy the nfquery.env.example into /var/www/etc. Update the FLOW_DIR to point to
+the directory where flows will be stored.
+
+Install helper programs and libraries
+=====================================
+
+The follwing commands can be used to install the necessary libraries and
+programs required to run the nfquery.cgi script.
+
+  # base progs and libs
+  install -C -d -o root -g bin -m 0755 /var/www/bin
+  install -C -o root -g bin -m 0555 /bin/ksh /var/www/bin/ksh
+  install -C -o root -g bin -m 0555 /bin/date /var/www/bin/date
+  install -C -o root -g bin -m 0555 /bin/echo /var/www/bin/echo
+  install -d -o root -g bin -m 0755 /var/www/usr/lib
+  install -d -o root -g bin -m 0755 /var/www/usr/libexec
+  install -C -o root -g bin -m 0444 /usr/lib/libc.so.* /var/www/usr/lib/
+  install -C -o root -g bin -m 0444 /usr/libexec/ld.so /var/www/usr/libexec/ld.so
+  install -C -o root -g bin -m 0555 /usr/bin/which /var/www/bin/which
+  install -C -o root -g bin -m 0555 /usr/bin/sed /var/www/bin/sed
+  install -C -o root -g bin -m 0555 /usr/bin/xargs /var/www/bin/xargs
+  install -C -o root -g bin -m 0555 /usr/bin/uname /var/www/bin/uname
+  install -C -o root -g bin -m 0555 /usr/bin/tr /var/www/bin/tr
+  install -C -o root -g bin -m 0555 /usr/bin/printf /var/www/bin/printf
+  # nfdump
+  install -C -o root -g bin -m 0444 /usr/lib/libz.so.* /var/www/usr/lib/
+  install -C -o root -g bin -m 0444 /usr/lib/libpthread.so.* /var/www/usr/lib/
+  install -d -o root -g bin -m 0755 /var/www/usr/local/lib
+  install -C -o root -g bin -m 0444 /usr/local/lib/libnfdump.so.* /var/www/usr/local/lib/
+  install -C -o root -g bin -m 0444 /usr/local/lib/liblz4.so.* /var/www/usr/local/lib/
+  install -C -o root -g bin -m 0444 /usr/local/lib/libbz2.so.* /var/www/usr/local/lib/
+  install -C -o root -g bin -m 0444 /usr/local/lib/libzstd.so.* /var/www/usr/local/lib/
+  install -C -o root -g bin -m 0444 /usr/local/lib/libnffile.so.* /var/www/usr/local/lib/
+  install -C -o root -g bin -m 0555 /usr/local/bin/nfdump /var/www/bin/nfdump
+  # create ld.so.hints
+  install -d -o root -g bin -m 0755 /var/www/var/run
+  install -C -o root -g bin -m 0555 /bin/ldconfig /var/www/bin/ldconfig
+  chroot /var/www ldconfig -v -s /usr/lib /usr/local/lib
+  
+Update httpd.conf file
+======================
+
+The following section can be added to the httpd.conf file to enable nfexplorer
+on the server.
+
+  location "/nfexplorer/nfquery.cgi" {
+  	root "/"
+  	fastcgi {
+  		socket "/run/slowcgi.sock"
+  		param SCRIPT_FILENAME "/nfexplorer/nfquery.cgi"
+  	}
+  }
+  location "/nfexplorer/*" {
+  	root "/"
+  	directory index "index.html"
+  }
+
+Enable and start slowcgi(8)
+===========================
+
+  rcctl enable slowcgi
+  rcctl start slowcgi
+
+Configure and enable the flow capture daemon nfcapd(8)
+======================================================
+
+If flows are not already being captured, the nfcapd(8) capture daemon can be
+used to capture and store the flows. The following commands will configure
+and start the nfcapd daemon
+
+  rcctl enable nfcapd
+  rcctl start nfcapd
+
+NOTE: this does not do any cleanup of old flows.  This will capture flows
+until the disk space is exausted. Investigate option -e and nfexpire(8).
+

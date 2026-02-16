@@ -1,0 +1,20 @@
+@rcscript ${RCDIR}/nfcapd
+etc/
+etc/nfquery.env.example
+nfexplorer/
+nfexplorer/addr.js
+nfexplorer/dygraph.css
+nfexplorer/dygraph.js
+nfexplorer/dygraph.js.map
+nfexplorer/dygraph.min.css
+nfexplorer/dygraph.min.css.map
+nfexplorer/dygraph.min.js
+nfexplorer/dygraph.min.js.map
+nfexplorer/flow_sort.js
+nfexplorer/flows.js
+nfexplorer/graphs.js
+nfexplorer/index.html
+nfexplorer/nfquery.cgi
+nfexplorer/ui.js
+@cwd ${LOCALBASE}/share/doc/pkg-readmes
+${PKGSTEM}
